@@ -1,4 +1,4 @@
-# Swagger Java Client
+# Swagger Server for Java
 
 ## Configuration
 
