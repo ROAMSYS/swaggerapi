@@ -5,7 +5,7 @@
     <!-- POM file generated with GWT webAppCreator -->
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.roamsys.swaggerapi</groupId>
-    <artifactId>com.roamsys.swaggerapi</artifactId>
+    <artifactId>swaggerapi</artifactId>
     <packaging>jar</packaging>
     <version>0.9.1</version>
     <organization>
