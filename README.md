@@ -47,6 +47,30 @@ Edit your **web.xml** and add the Swagger API servlet. Thats all.
 </web-app>
 ````
 
+### Example API declaration
+
+````java
+@SwaggerModel (path = "/metadata")
+public class MetadataAPI implements SwaggerAPIModel {
+
+    @SwaggerApi (notes = "Returns a list of all documents", method = HTTPMethod.GET, path = "/all", summary = "Get document list")
+    public void all(final SwaggerAPIContext context) throws IOException {
+        context.getResponse().getWriter().println("[ { \"name\" : \"document 1\", \"hash\" : \"abc\"}, { \"name\": \"another document\", \"hash\" : \"rrr\"} ]");
+    }
+
+    @SwaggerApi (notes = "Returns detailed information a specific document", method = HTTPMethod.GET, path = "/details/{hash}", summary = "Get document details")
+    public void allForTypeAndFormat(final SwaggerAPIContext context,
+            @SwaggerParameter (name = "hash", description = "The document hash", required = true, paramType = ParamType.PATH, dataType = DataType.STRING) final String hash) {
+        if (hash.equals("abc")) {
+            context.getResponse().getWriter().println("{ \"name\" : \"document 1\", \"hash\" : \"abc\", , \"size\" : 1232, , \"extension\" : \"odt\"}");
+        } else if (hash.equals("rrr")) {
+            context.getResponse().getWriter().println("{ \"name\" : \"another document\", \"hash\" : \"rrr\", , \"size\" : 3532, , \"extension\" : \"zip\"}");
+        }
+    }
+}
+
+````
+
 # License
 
 The MIT License (MIT)
