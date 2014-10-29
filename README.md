@@ -47,11 +47,7 @@ Edit your **web.xml** and add the Swagger API servlet. Thats all.
 </web-app>
 ````
 
-### Example API declaration
-
-Each class defining an API has to be annotated with @SwaggerModel(path = "pathToAPIs"). All APIs defined in the class will have that path as prefix. 
-The following example defines two APIs. Both APIs will be available thru the base path of your application followed by */metadata*.
-
+## Example API declaration
 ````java
 @SwaggerModel (path = "/metadata")
 public class MetadataAPI implements SwaggerAPIModel {
@@ -71,7 +67,13 @@ public class MetadataAPI implements SwaggerAPIModel {
       path = "/details/{hash}",
       summary = "Get document details")
     public void allForTypeAndFormat(final SwaggerAPIContext context,
-            @SwaggerParameter (name = "hash", description = "The document hash", required = true, paramType = ParamType.PATH, dataType = DataType.STRING) final String hash) {
+            @SwaggerParameter (
+              name = "hash",
+              description = "The document hash",
+              required = true,
+              paramType = ParamType.PATH,
+              dataType = DataType.STRING
+            ) final String hash) {
         if (hash.equals("abc")) {
             context.getResponse().getWriter().println("{ \"name\" : \"document 1\", \"hash\" : \"abc\", , \"size\" : 1232, , \"extension\" : \"odt\"}");
         } else if (hash.equals("rrr")) {
@@ -80,12 +82,44 @@ public class MetadataAPI implements SwaggerAPIModel {
     }
 }
 ````
-To make an method available as public API annotate it with @SwaggerApi and provide usual the Swagger specifications:
+### API class annotation
+
+Each class defining an API has to be annotated with @SwaggerModel(path = "pathToAPIs"). All APIs defined in the class will have that path as prefix. 
+The following example defines two APIs. Both APIs will be available thru the base path of your application followed by */metadata*.
+
+### API method annotations
+
+To make an method available as public API annotate it with @SwaggerApi and provide the usual Swagger specifications:
 
 * **notes** - A description for the API
 * **method** - The HTTP method GET, PUT, POST, DELETE
 * **path** - The URL pattern containing placeholders for parameters
 * **summary** - A short description or name for the API
+
+### Method parameters
+
+The parameters used in the URL must annotated with the @SwaggerParameter annotation, which uses the following properties:
+
+* **name** - The name of the parameter, should be the same as the method argument
+* **description** - A short description for the parameter
+* **required** - Set this to *true* for mandatory parameters, optional parameters should be placed at the end of the URL, if paramType is PATH
+* **paramType** - The type/kind of the parameter
+     * *PATH* - For parameters placed in a REST-full URL seperated by slashes
+     * *QUERY* - For parameters in a query string append to the URL
+     * *BODY* - For parameters in a the body (the data) of a PUT or POST request
+     * *HEADER* - For parameters in the request header
+     * *FORM* - For parameters in a request body encoded with *multipart/form-data*
+* **dataType** - The data type of the parameter
+     * *STRING*
+     * *INTEGER*
+     * *DATE*
+     * *BOOLEAN*
+     * *FLOAT*
+     * *DOUBLE*
+     * *BYTE*
+     * *DATETIME*
+
+**Note:** At the moment not all *dataType*s and *paramType*s are supported. But feel free to fix that.
 
 # License
 
