@@ -1,5 +1,15 @@
 # Swagger Java Client
 
+* [Configuration](#configuration)
+* [Register the Swagger API components](#register-the-swagger-api-components)
+    * [Start Up listener](#start-up-listener)
+    * [Servlet for API calls](#servlet-for-api-calls)
+* [Example API declaration](#example-api-declaration)
+    * [API class annotation](#api-class-annotation)
+    * [API method annotations](#api-method-annotations)
+    * [Method parameters](#method-parameters)
+* [License](#license)
+
 ## Configuration
 
 Create a class that extends the **SwaggerAPIListener** class. Here you can do all your configuration using the instance of SwaggerAPIConfig. Use the **registerModel** method to add your API services.
@@ -121,7 +131,7 @@ The parameters used in the URL must annotated with the @SwaggerParameter annotat
 
 **Note:** At the moment not all *dataType*s and *paramType*s are supported. But feel free to fix that.
 
-# License
+## License
 
 The MIT License (MIT)
 
