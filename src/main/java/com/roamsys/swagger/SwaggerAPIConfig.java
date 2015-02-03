@@ -55,7 +55,7 @@ public class SwaggerAPIConfig {
     /**
      * List of API doc models included in resources.json
      */
-    final private JSONArray resourcesAPIs;
+    final private Map<String, JSONObject> resourcesAPIs;
 
     /**
      * Defines if cross origin access is allowed
@@ -92,13 +92,7 @@ public class SwaggerAPIConfig {
      */
     public SwaggerAPIConfig() {
         resources = new JSONObject();
-        resourcesAPIs = new JSONArray();
-
-        try {
-            resources.put("apis", resourcesAPIs);
-        } catch (JSONException ex) {
-            throw new IllegalArgumentException("Error accessing JSON", ex);
-        }
+        resourcesAPIs = new HashMap<String, JSONObject>();
     }
 
     /**
@@ -113,12 +107,15 @@ public class SwaggerAPIConfig {
                 final SwaggerModel modelAnnotation = model.getClass().getAnnotation(SwaggerModel.class);
                 final String modelPath = modelAnnotation.path();
 
-                final JSONObject resourceModel = new JSONObject();
-                resourceModel.put("path", modelPath);
-                if (!modelAnnotation.description().isEmpty()) {
-                    resourceModel.put("description", modelAnnotation.description());
+                // add model only once
+                if (!resourcesAPIs.containsKey(modelPath)) {
+                    final JSONObject resourceModel = new JSONObject();
+                    resourceModel.put("path", modelPath);
+                    if (!modelAnnotation.description().isEmpty()) {
+                        resourceModel.put("description", modelAnnotation.description());
+                    }
+                    resourcesAPIs.put(modelPath, resourceModel);
                 }
-                resourcesAPIs.put(resourceModel);
 
                 for (final Method method : model.getClass().getMethods()) {
                     if (method.isAnnotationPresent(SwaggerApi.class)) {
@@ -261,6 +258,11 @@ public class SwaggerAPIConfig {
      * @return resources JSON object
      */
     public JSONObject getAPIDoc() {
+        try {
+            resources.put("apis", resourcesAPIs.values());
+        } catch (JSONException ex) {
+            throw new IllegalArgumentException("Error accessing JSON", ex);
+        }
         return resources;
     }
 
