@@ -1,0 +1,6 @@
+nb-configuration.xml
+nbactions*.xml
+target/
+.settings
+.classpath
+.project

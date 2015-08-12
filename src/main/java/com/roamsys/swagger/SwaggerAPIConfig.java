@@ -1,5 +1,10 @@
 package com.roamsys.swagger;
 
+import org.apache.commons.lang.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.roamsys.swagger.annotations.SwaggerApi;
 import com.roamsys.swagger.annotations.SwaggerModel;
 import com.roamsys.swagger.annotations.SwaggerParameter;
@@ -14,11 +19,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * The swagger configuration
@@ -105,12 +105,12 @@ public class SwaggerAPIConfig {
         if (model.getClass().isAnnotationPresent(SwaggerModel.class)) {
             try {
                 final SwaggerModel modelAnnotation = model.getClass().getAnnotation(SwaggerModel.class);
-                final String modelPath = modelAnnotation.path();
+                final String modelPath = modelAnnotation.path() + "." + modelAnnotation.format();
 
                 // add model only once
-                if (!resourcesAPIs.containsKey(modelPath)) {
+                if (!resourcesAPIs.containsKey(modelPath) && modelAnnotation.format().equals("json")) {
                     final JSONObject resourceModel = new JSONObject();
-                    resourceModel.put("path", modelPath);
+                    resourceModel.put("path", modelAnnotation.path() + ".{format}");
                     if (!modelAnnotation.description().isEmpty()) {
                         resourceModel.put("description", modelAnnotation.description());
                     }
@@ -138,7 +138,6 @@ public class SwaggerAPIConfig {
                         final Annotation[][] annotations = method.getParameterAnnotations();
                         final JSONArray parameters = new JSONArray();
                         final ArrayList<SwaggerAPIParameterData> paramData = new ArrayList<SwaggerAPIParameterData>(annotations.length);
-                        int i = 0;
 
                         // create the resource.json content for the method parameters and add the parameter types to the data structure
                         for (final Annotation[] param : annotations) {
@@ -260,7 +259,7 @@ public class SwaggerAPIConfig {
     public JSONObject getAPIDoc() {
         try {
             resources.put("apis", resourcesAPIs.values());
-        } catch (JSONException ex) {
+        } catch (final JSONException ex) {
             throw new IllegalArgumentException("Error accessing JSON", ex);
         }
         return resources;
