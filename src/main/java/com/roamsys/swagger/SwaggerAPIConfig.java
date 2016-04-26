@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import javax.servlet.ServletContext;
 
 /**
  * The swagger configuration
@@ -88,9 +89,17 @@ public class SwaggerAPIConfig {
     private SwaggerAPICustomRequestHandler postRequestHandler;
 
     /**
-     * Constructor to initialize values
+     * The context of the servlet session
      */
-    public SwaggerAPIConfig() {
+    private final ServletContext servletContext;
+
+    /**
+     * Constructor to initialize values
+     * @param servletContext the servlet context
+     */
+    public SwaggerAPIConfig(final ServletContext servletContext) {
+        this.servletContext = servletContext;
+
         resources = new JSONObject();
         resourcesAPIs = new HashMap<String, JSONObject>();
     }
@@ -249,6 +258,14 @@ public class SwaggerAPIConfig {
      */
     public void setInfo(final String info) {
         addToResourcesJSON("info", info);
+    }
+
+    /**
+     * Returns the context of the Swagger API servlet
+     * @return the servlet context
+     */
+    public ServletContext getServletContext() {
+        return servletContext;
     }
 
     /**
