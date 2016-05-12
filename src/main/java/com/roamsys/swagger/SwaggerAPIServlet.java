@@ -40,13 +40,14 @@ public class SwaggerAPIServlet extends HttpServlet {
     private final static String DATE_FORMAT = "yyyy-MM-dd";
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
+     * methods.
      *
-     * @param request  servlet request
+     * @param request servlet request
      * @param response servlet response
-     * @param method   the HTTP method call type
+     * @param method the HTTP method call type
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     protected void processRequest(final HttpServletRequest request, final HttpServletResponse response, final HTTPMethod method) throws ServletException, IOException {
         final SwaggerAPIConfig config = (SwaggerAPIConfig) request.getSession().getServletContext().getAttribute(SwaggerAPIConfig.SERVLET_ATTRIBUTE_NAME);
@@ -185,9 +186,10 @@ public class SwaggerAPIServlet extends HttpServlet {
     }
 
     /**
-     * Convert the swagger API parameter to a method argument class type depending on the swagger API data type
+     * Convert the swagger API parameter to a method argument class type
+     * depending on the swagger API data type
      *
-     * @param dataType   the swagger API paramter data type
+     * @param dataType the swagger API paramter data type
      * @param paramValue the value of the parameter as string
      * @return the argument
      */
@@ -198,6 +200,9 @@ public class SwaggerAPIServlet extends HttpServlet {
 
             case INTEGER:
                 return Integer.parseInt(paramValue);
+
+            case LONG:
+                return Long.parseLong(paramValue);
 
             case BOOLEAN:
                 return Boolean.valueOf(paramValue);
