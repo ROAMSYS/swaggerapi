@@ -57,11 +57,11 @@
         </repository>
     </repositories>
     <distributionManagement>
-        <site>
+        <repository>
             <id>roamsys-repository</id>
             <name>Roamsys Repository</name>
             <url>scp://37.157.154.101/home/mvnuser/repository</url>
-        </site>
+        </repository>
     </distributionManagement>
     <developers>
         <developer>
