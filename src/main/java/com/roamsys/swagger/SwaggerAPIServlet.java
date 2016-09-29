@@ -94,7 +94,7 @@ public class SwaggerAPIServlet extends HttpServlet {
         }
 
         // Basic resource.json
-        if (path == null || path.equals("/") || path.equals("/resources.json")) {
+        if (path == null || path.equals("") || path.equals("/") || path.equals("/resources.json")) {
             response.setStatus(HttpURLConnection.HTTP_OK);
             response.setContentType(ContentType.JSON_UTF8);
             response.getWriter().println(config.getAPIDoc().toString());
@@ -111,7 +111,7 @@ public class SwaggerAPIServlet extends HttpServlet {
             // Define base path
             final int bashPathEndPos = path.indexOf("/", 1);
             if (bashPathEndPos == -1) {
-                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid base URL", new IndexOutOfBoundsException());
+                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid base URL", new NotImplementedException());
             }
             final String basePath = path.substring(0, path.indexOf("/", 1));
             if (config.isAPIModelPath(basePath)) {
