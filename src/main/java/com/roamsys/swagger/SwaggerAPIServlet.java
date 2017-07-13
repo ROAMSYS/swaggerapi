@@ -1,5 +1,8 @@
 package com.roamsys.swagger;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.StringUtils;
 import com.roamsys.swagger.annotations.SwaggerApi.HTTPMethod;
 import com.roamsys.swagger.annotations.SwaggerParameter.DataType;
 import com.roamsys.swagger.data.ContentType;
@@ -7,25 +10,17 @@ import com.roamsys.swagger.data.SwaggerAPIContext;
 import com.roamsys.swagger.data.SwaggerAPIModelData;
 import com.roamsys.swagger.data.SwaggerAPIParameterData;
 import com.roamsys.swagger.data.SwaggerExceptionHandler;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
-import java.net.URLDecoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.CharEncoding;
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * The Swagger API servlet
@@ -37,7 +32,12 @@ public class SwaggerAPIServlet extends HttpServlet {
     /**
      * Date format for API calls
      */
-    private final static String DATE_FORMAT = "yyyy-MM-dd";
+    private static final String DATE_FORMAT = "yyyy-MM-dd";
+
+    /**
+     * Date-Time format for API calls
+     */
+    private static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXXX";
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -52,7 +52,7 @@ public class SwaggerAPIServlet extends HttpServlet {
     protected void processRequest(final HttpServletRequest request, final HttpServletResponse response, final HTTPMethod method) throws ServletException, IOException {
         final SwaggerAPIConfig config = (SwaggerAPIConfig) request.getSession().getServletContext().getAttribute(SwaggerAPIConfig.SERVLET_ATTRIBUTE_NAME);
 
-        final String uri = URLDecoder.decode(request.getRequestURI(), CharEncoding.UTF_8);
+        final String uri = request.getRequestURI();
         final String path = uri.substring(request.getContextPath().length() + request.getServletPath().length(), uri.length());
 
         // register exception handler for API
@@ -171,6 +171,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                             } catch (final Throwable ex) {
                                 config.getExceptionHandler().handleException(this, response, HttpURLConnection.HTTP_BAD_REQUEST, "Internal server error for called method. See server error log for details.", ex);
                             }
+                            break;
                         }
                     }
                 }
@@ -197,19 +198,16 @@ public class SwaggerAPIServlet extends HttpServlet {
         switch (dataType) {
             case STRING:
                 return paramValue;
-
             case INTEGER:
                 return Integer.parseInt(paramValue);
-
             case LONG:
                 return Long.parseLong(paramValue);
-
             case BOOLEAN:
                 return Boolean.valueOf(paramValue);
-
             case DATE:
                 return new SimpleDateFormat(DATE_FORMAT).parse(paramValue);
-
+            case DATETIME:
+                return new SimpleDateFormat(DATE_TIME_FORMAT).parse(paramValue);
             default:
                 throw new NotImplementedException("Handling for data type \"" + dataType.name() + "\" not yet implemented.");
         }
