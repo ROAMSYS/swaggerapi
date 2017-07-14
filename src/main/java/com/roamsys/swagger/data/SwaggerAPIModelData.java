@@ -55,7 +55,8 @@ public class SwaggerAPIModelData {
         this.modelClass = modelClass;
         this.method = method;
         this.httpMethod = httpMethod;
-        this.path = Pattern.compile(path.replaceAll(PATTERN, "(.+)"));
+        //this.path = Pattern.compile(path.replaceAll(PATTERN, "(.+)"));
+        this.path = Pattern.compile("^" + path.replaceAll(PATTERN, "(\\[^/\\]+)") + "$");
         this.paramData = paramData;
     }
 
@@ -76,7 +77,7 @@ public class SwaggerAPIModelData {
      * @return true if given method equals HTTP method of swagger API
      */
     public boolean hasHTTPMethod(final HTTPMethod method) {
-        return this.httpMethod == method;
+        return httpMethod == method;
     }
 
     /**
