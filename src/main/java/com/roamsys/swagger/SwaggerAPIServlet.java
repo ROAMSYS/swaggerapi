@@ -12,7 +12,6 @@ import com.roamsys.swagger.data.SwaggerAPIParameterData;
 import com.roamsys.swagger.data.SwaggerExceptionHandler;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -64,7 +63,8 @@ public class SwaggerAPIServlet extends HttpServlet {
                 config.setExceptionHandler((SwaggerExceptionHandler) clazz.newInstance());
             } catch (final Exception ex) {
                 //log error with default exception handler
-                config.getExceptionHandler().handleException(this, response, HttpURLConnection.HTTP_BAD_REQUEST, "Could not instantiate Swagger exception handler [" + exceptionHandlerClass + "]. Default exception handler will be used.", ex);
+                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST,
+                        "Could not instantiate Swagger exception handler [" + exceptionHandlerClass + "]. Default exception handler will be used.", ex);
             }
         }
 
@@ -96,13 +96,13 @@ public class SwaggerAPIServlet extends HttpServlet {
 
         // Basic resource.json
         if (path == null || path.equals("") || path.equals("/") || path.equals("/resources.json")) {
-            response.setStatus(HttpURLConnection.HTTP_OK);
+            response.setStatus(HttpServletResponse.SC_OK);
             response.setContentType(ContentType.JSON_UTF8);
             response.getWriter().println(config.getAPIDoc().toString());
 
             // API models
         } else if (config.isAPIModelPath(path)) {
-            response.setStatus(HttpURLConnection.HTTP_OK);
+            response.setStatus(HttpServletResponse.SC_OK);
             response.setContentType(ContentType.JSON_UTF8);
             response.getWriter().println(config.getAPIModelFor(path));
 
@@ -121,7 +121,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                     if (api.hasHTTPMethod(method)) {
                         final Matcher m = api.matchPath(path);
                         if (m.matches()) {
-                            response.setStatus(HttpURLConnection.HTTP_OK);
+                            response.setStatus(HttpServletResponse.SC_OK);
 
                             // Set up variables for parameter collection
                             final ArrayList<SwaggerAPIParameterData> paramsData = api.getParameterDetails();
@@ -156,7 +156,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                                             arguments[i] = convertParamToArgument(paramData.getDataType(), IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8));
                                     }
                                 } catch (final ParseException ex) {
-                                    config.getExceptionHandler().handleException(this, response, HttpURLConnection.HTTP_BAD_REQUEST, "", ex);
+                                    config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST, "", ex);
                                 }
                             }
 
@@ -164,13 +164,16 @@ public class SwaggerAPIServlet extends HttpServlet {
                             try {
                                 api.getMethod().invoke(api.getAPIModelClass(), arguments);
                             } catch (final IllegalAccessException ex) {
-                                config.getExceptionHandler().handleException(this, response, HttpURLConnection.HTTP_BAD_REQUEST, "Called method is not visible", ex);
+                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST, "Called method is not visible", ex);
                             } catch (final IllegalArgumentException ex) {
-                                config.getExceptionHandler().handleException(this, response, HttpURLConnection.HTTP_NOT_ACCEPTABLE, "Illegal parameters for called method. See server error log for details.", ex);
+                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_NOT_ACCEPTABLE,
+                                        "Illegal parameters for called method. See server error log for details.", ex);
                             } catch (final InvocationTargetException ex) {
-                                config.getExceptionHandler().handleException(this, response, HttpURLConnection.HTTP_BAD_REQUEST, "Error calling method. See server error log for details.", ex);
+                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST,
+                                        "Error calling method. See server error log for details.", ex);
                             } catch (final Throwable ex) {
-                                config.getExceptionHandler().handleException(this, response, HttpURLConnection.HTTP_BAD_REQUEST, "Internal server error for called method. See server error log for details.", ex);
+                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST,
+                                        "Internal server error for called method. See server error log for details.", ex);
                             }
                             break;
                         }
@@ -248,7 +251,7 @@ public class SwaggerAPIServlet extends HttpServlet {
             response.setContentType(config.getDefaultContentType());
         }
 
-        response.setStatus(HttpURLConnection.HTTP_OK);
+        response.setStatus(HttpServletResponse.SC_OK);
         response.flushBuffer();
     }
 }
