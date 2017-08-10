@@ -29,11 +29,7 @@ public class SwaggerAPIDefaultAuthorizationHandler implements SwaggerAPIAuthoriz
         final String requestAPIKeyParam = request.getParameter("api_key");
         if (requestAPIKeyParam == null || !requestAPIKeyParam.equals(apiKey)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            if (response.getContentType().contains("json")) {
-                response.getWriter().println("Invalid authorization key");
-            } else {
-                response.getWriter().println("Invalid authorization key");
-            }
+            response.getWriter().println("Invalid authorization key");
             return false;
         }
 
