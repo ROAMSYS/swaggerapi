@@ -55,8 +55,7 @@ public class SwaggerAPIModelData {
         this.modelClass = modelClass;
         this.method = method;
         this.httpMethod = httpMethod;
-        //this.path = Pattern.compile(path.replaceAll(PATTERN, "(.+)"));
-        this.path = Pattern.compile("^" + path.replaceAll(PATTERN, "(\\[^/\\]+)") + "$");
+        this.path = Pattern.compile(path.replaceAll(PATTERN, "(\\[^/\\]+)"));
         this.paramData = paramData;
     }
 

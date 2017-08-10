@@ -13,6 +13,7 @@ import com.roamsys.swagger.data.SwaggerExceptionHandler;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -152,7 +153,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                                             break;
 
                                         default:
-                                            arguments[i] = convertParamToArgument(paramData.getDataType(), IOUtils.toString(request.getInputStream()));
+                                            arguments[i] = convertParamToArgument(paramData.getDataType(), IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8));
                                     }
                                 } catch (final ParseException ex) {
                                     config.getExceptionHandler().handleException(this, response, HttpURLConnection.HTTP_BAD_REQUEST, "", ex);
