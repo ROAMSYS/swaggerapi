@@ -18,7 +18,9 @@ public interface SwaggerExceptionHandler {
         @Override
         public void handleException(final HttpServlet servlet, final HttpServletResponse response, final int code, final String message, final Throwable ex) {
             System.err.println("Error: " + message + ", status code: " + code);
-            ex.printStackTrace(System.err);
+            if (ex != null) {
+                ex.printStackTrace(System.err);
+            }
         }
     };
 

@@ -1,8 +1,5 @@
 package com.roamsys.swagger;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.StringUtils;
 import com.roamsys.swagger.annotations.SwaggerApi.HTTPMethod;
 import com.roamsys.swagger.annotations.SwaggerParameter.DataType;
 import com.roamsys.swagger.data.ContentType;
@@ -12,6 +9,7 @@ import com.roamsys.swagger.data.SwaggerAPIParameterData;
 import com.roamsys.swagger.data.SwaggerExceptionHandler;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -21,6 +19,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.CharEncoding;
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * The Swagger API servlet
@@ -28,6 +30,8 @@ import javax.servlet.http.HttpServletResponse;
  * @author johanna
  */
 public class SwaggerAPIServlet extends HttpServlet {
+
+    private static final long serialVersionUID = 1L;
 
     /**
      * Date format for API calls
@@ -83,10 +87,9 @@ public class SwaggerAPIServlet extends HttpServlet {
         /**
          * try to authenticate the API call
          */
-        if (config.getAuthorizationHandler() != null) {
-            if (!config.getAuthorizationHandler().isRequestAuthorized(request, response)) {
-                return;
-            }
+        if (config.getAuthorizationHandler() != null && !config.getAuthorizationHandler().isRequestAuthorized(request, response)) {
+            config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid authorization key", null);
+            return;
         }
 
         // execute pre-request handler
@@ -112,7 +115,8 @@ public class SwaggerAPIServlet extends HttpServlet {
             // Define base path
             final int bashPathEndPos = path.indexOf("/", 1);
             if (bashPathEndPos == -1) {
-                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid base URL", new NotImplementedException());
+                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid base URL", null);
+                return;
             }
             final String basePath = path.substring(0, path.indexOf("/", 1));
             if (config.isAPIModelPath(basePath)) {
@@ -156,7 +160,8 @@ public class SwaggerAPIServlet extends HttpServlet {
                                             arguments[i] = convertParamToArgument(paramData.getDataType(), IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8));
                                     }
                                 } catch (final ParseException ex) {
-                                    config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST, "", ex);
+                                    config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST, "Invalid value for parameter " + paramData.getName(), ex);
+                                    return;
                                 }
                             }
 
@@ -198,7 +203,7 @@ public class SwaggerAPIServlet extends HttpServlet {
      * @param paramValue the value of the parameter as string
      * @return the argument
      */
-    private Object convertParamToArgument(final DataType dataType, final String paramValue) throws ParseException {
+    private Object convertParamToArgument(final DataType dataType, final String paramValue) throws ParseException, IOException {
         switch (dataType) {
             case STRING:
                 return paramValue;
@@ -211,7 +216,13 @@ public class SwaggerAPIServlet extends HttpServlet {
             case DATE:
                 return new SimpleDateFormat(DATE_FORMAT).parse(paramValue);
             case DATETIME:
-                return new SimpleDateFormat(DATE_TIME_FORMAT).parse(paramValue);
+                final SimpleDateFormat dateTimeFormat = new SimpleDateFormat(DATE_TIME_FORMAT);
+                try {
+                    return dateTimeFormat.parse(paramValue);
+                } catch (final ParseException ex) {
+                    // Swagger UI will encode the URL - let's try with decoded value again
+                    return dateTimeFormat.parse(URLDecoder.decode(paramValue, CharEncoding.UTF_8));
+                }
             default:
                 throw new NotImplementedException("Handling for data type \"" + dataType.name() + "\" not yet implemented.");
         }
