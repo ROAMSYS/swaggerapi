@@ -1,5 +1,10 @@
 package com.roamsys.swagger;
 
+import org.apache.commons.lang.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.roamsys.swagger.annotations.SwaggerApi;
 import com.roamsys.swagger.annotations.SwaggerModel;
 import com.roamsys.swagger.annotations.SwaggerParameter;
@@ -14,11 +19,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import javax.servlet.ServletContext;
 
 /**
  * The swagger configuration
@@ -55,7 +56,7 @@ public class SwaggerAPIConfig {
     /**
      * List of API doc models included in resources.json
      */
-    final private JSONArray resourcesAPIs;
+    final private Map<String, JSONObject> resourcesAPIs;
 
     /**
      * Defines if cross origin access is allowed
@@ -88,17 +89,19 @@ public class SwaggerAPIConfig {
     private SwaggerAPICustomRequestHandler postRequestHandler;
 
     /**
-     * Constructor to initialize values
+     * The context of the servlet session
      */
-    public SwaggerAPIConfig() {
-        resources = new JSONObject();
-        resourcesAPIs = new JSONArray();
+    private final ServletContext servletContext;
 
-        try {
-            resources.put("apis", resourcesAPIs);
-        } catch (JSONException ex) {
-            throw new IllegalArgumentException("Error accessing JSON", ex);
-        }
+    /**
+     * Constructor to initialize values
+     * @param servletContext the servlet context
+     */
+    public SwaggerAPIConfig(final ServletContext servletContext) {
+        this.servletContext = servletContext;
+
+        resources = new JSONObject();
+        resourcesAPIs = new HashMap<String, JSONObject>();
     }
 
     /**
@@ -111,14 +114,17 @@ public class SwaggerAPIConfig {
         if (model.getClass().isAnnotationPresent(SwaggerModel.class)) {
             try {
                 final SwaggerModel modelAnnotation = model.getClass().getAnnotation(SwaggerModel.class);
-                final String modelPath = modelAnnotation.path();
+                final String modelPath = modelAnnotation.path() + "." + modelAnnotation.format();
 
-                final JSONObject resourceModel = new JSONObject();
-                resourceModel.put("path", modelPath);
-                if (!modelAnnotation.description().isEmpty()) {
-                    resourceModel.put("description", modelAnnotation.description());
+                // add model only once
+                if (!resourcesAPIs.containsKey(modelPath) && modelAnnotation.format().equals("json")) {
+                    final JSONObject resourceModel = new JSONObject();
+                    resourceModel.put("path", modelAnnotation.path() + ".{format}");
+                    if (!modelAnnotation.description().isEmpty()) {
+                        resourceModel.put("description", modelAnnotation.description());
+                    }
+                    resourcesAPIs.put(modelPath, resourceModel);
                 }
-                resourcesAPIs.put(resourceModel);
 
                 for (final Method method : model.getClass().getMethods()) {
                     if (method.isAnnotationPresent(SwaggerApi.class)) {
@@ -141,7 +147,6 @@ public class SwaggerAPIConfig {
                         final Annotation[][] annotations = method.getParameterAnnotations();
                         final JSONArray parameters = new JSONArray();
                         final ArrayList<SwaggerAPIParameterData> paramData = new ArrayList<SwaggerAPIParameterData>(annotations.length);
-                        int i = 0;
 
                         // create the resource.json content for the method parameters and add the parameter types to the data structure
                         for (final Annotation[] param : annotations) {
@@ -256,11 +261,24 @@ public class SwaggerAPIConfig {
     }
 
     /**
+     * Returns the context of the Swagger API servlet
+     * @return the servlet context
+     */
+    public ServletContext getServletContext() {
+        return servletContext;
+    }
+
+    /**
      * Returns the basic JSON containing the API data for resource.json
      *
      * @return resources JSON object
      */
     public JSONObject getAPIDoc() {
+        try {
+            resources.put("apis", resourcesAPIs.values());
+        } catch (final JSONException ex) {
+            throw new IllegalArgumentException("Error accessing JSON", ex);
+        }
         return resources;
     }
 

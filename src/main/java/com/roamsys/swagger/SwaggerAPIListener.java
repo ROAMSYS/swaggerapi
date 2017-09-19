@@ -1,5 +1,6 @@
 package com.roamsys.swagger;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import org.json.JSONObject;
@@ -13,8 +14,10 @@ public abstract class SwaggerAPIListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(final ServletContextEvent sce) {
-        final SwaggerAPIConfig model = new SwaggerAPIConfig();
-        sce.getServletContext().setAttribute(SwaggerAPIConfig.SERVLET_ATTRIBUTE_NAME, model);
+        final ServletContext servletContext = sce.getServletContext();
+
+        final SwaggerAPIConfig model = new SwaggerAPIConfig(servletContext);
+        servletContext.setAttribute(SwaggerAPIConfig.SERVLET_ATTRIBUTE_NAME, model);
 
         System.out.print("Initializing Swagger API components ... ");
         initialize(model);

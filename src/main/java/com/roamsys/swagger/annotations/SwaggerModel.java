@@ -27,4 +27,12 @@ public @interface SwaggerModel {
      * @return model description as string
      */
     String description() default "";
+
+    /**
+     * The result format of the model.
+     * 
+     * @return result format
+     */
+    String format() default "json";
+
 }

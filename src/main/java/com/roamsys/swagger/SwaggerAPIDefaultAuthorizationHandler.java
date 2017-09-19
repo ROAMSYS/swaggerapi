@@ -1,7 +1,6 @@
 package com.roamsys.swagger;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,17 +27,7 @@ public class SwaggerAPIDefaultAuthorizationHandler implements SwaggerAPIAuthoriz
     @Override
     public boolean isRequestAuthorized(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         final String requestAPIKeyParam = request.getParameter("api_key");
-        if (requestAPIKeyParam == null || !requestAPIKeyParam.equals(apiKey)) {
-            response.setStatus(HttpURLConnection.HTTP_UNAUTHORIZED);
-            if (response.getContentType().contains("json")) {
-                response.getWriter().println("Invalid authorization key");
-            } else {
-                response.getWriter().println("Invalid authorization key");
-            }
-            return false;
-        }
-
-        return true;
+        return requestAPIKeyParam != null && requestAPIKeyParam.equals(apiKey);
     }
 
 }

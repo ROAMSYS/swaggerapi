@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <!-- POM file generated with GWT webAppCreator -->
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.roamsys.swaggerapi</groupId>
+    <groupId>com.roamsys.opensource</groupId>
     <artifactId>swaggerapi</artifactId>
     <packaging>jar</packaging>
-    <version>0.9.1</version>
+    <version>1.0.1-SNAPSHOT</version>
     <organization>
         <name>ROAMSYS S.A.</name>
         <url>http://www.roamsys.com</url>
@@ -29,26 +29,42 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.2</version>
+            <version>2.5</version>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20090211</version>
+            <version>20160810</version>
+        </dependency>    
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <properties>
-        <maven.compiler.target>1.7</maven.compiler.target>
-        <maven.compiler.source>1.7</maven.compiler.source>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <build>
-    <extensions>
-        <extension>
-            <groupId>org.apache.maven.wagon</groupId>
-            <artifactId>wagon-ssh</artifactId>
-            <version>2.1</version>
-        </extension>
-    </extensions>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh</artifactId>
+                <version>2.10</version>
+            </extension>
+        </extensions>
     </build>
     <repositories>
         <repository>
@@ -64,4 +80,35 @@
             <url>scp://37.157.154.101/home/mvnuser/repository</url>
         </repository>
     </distributionManagement>
+    <developers>
+        <developer>
+            <name>Michael Bartel</name>
+            <email>mbartel@roamsys.com</email>
+            <organization>ROAMSYS S.A.</organization>
+            <organizationUrl>http://www.roamsys.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Johanna Heib</name>
+            <email>johanna@roamsys.com</email>
+            <organization>ROAMSYS S.A.</organization>
+            <organizationUrl>http://www.roamsys.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Norbert Becker</name>
+            <email>norbert@roamsys.com</email>
+            <organization>ROAMSYS S.A.</organization>
+            <organizationUrl>http://www.roamsys.com</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git@github.com:ROAMSYS/swaggerapi.git</connection>
+        <developerConnection>scm:git:git@github.com:ROAMSYS/swaggerapi.git</developerConnection>
+        <url>git@github.com:ROAMSYS/swaggerapi.git</url>
+    </scm>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
 </project>

@@ -41,6 +41,7 @@ public @interface SwaggerParameter {
      * Enum constants for parameter date types
      */
     public enum DataType {
+        DATA("data"),
         STRING("string"),
         INTEGER("integer"),
         DATE("date"),
