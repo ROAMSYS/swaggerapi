@@ -262,7 +262,7 @@ public class SwaggerAPIServlet extends HttpServlet {
     }
     
     @Override
-    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void service(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         try {
             super.service(request, response);
         } finally {
