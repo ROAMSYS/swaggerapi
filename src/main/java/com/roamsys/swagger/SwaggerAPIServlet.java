@@ -44,8 +44,7 @@ public class SwaggerAPIServlet extends HttpServlet {
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXXX";
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -67,8 +66,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                 config.setExceptionHandler((SwaggerExceptionHandler) clazz.newInstance());
             } catch (final Exception ex) {
                 //log error with default exception handler
-                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST,
-                        "Could not instantiate Swagger exception handler [" + exceptionHandlerClass + "]. Default exception handler will be used.", ex);
+                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST, "Could not instantiate Swagger exception handler [" + exceptionHandlerClass + "]. Default exception handler will be used.", ex);
             }
         }
 
@@ -171,14 +169,11 @@ public class SwaggerAPIServlet extends HttpServlet {
                             } catch (final IllegalAccessException ex) {
                                 config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST, "Called method is not visible", ex);
                             } catch (final IllegalArgumentException ex) {
-                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_NOT_ACCEPTABLE,
-                                        "Illegal parameters for called method. See server error log for details.", ex);
+                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_NOT_ACCEPTABLE, "Illegal parameters for called method. See server error log for details.", ex);
                             } catch (final InvocationTargetException ex) {
-                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST,
-                                        "Error calling method. See server error log for details.", ex);
+                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST, "Error calling method. See server error log for details.", ex);
                             } catch (final Throwable ex) {
-                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST,
-                                        "Internal server error for called method. See server error log for details.", ex);
+                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST, "Internal server error for called method. See server error log for details.", ex);
                             }
                             break;
                         }
@@ -264,5 +259,15 @@ public class SwaggerAPIServlet extends HttpServlet {
 
         response.setStatus(HttpServletResponse.SC_OK);
         response.flushBuffer();
+    }
+    
+    @Override
+    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        try {
+            super.service(request, response);
+        } finally {
+            // because Swagger REST calls are stateless the session should be invalidated immediately
+            request.getSession().invalidate();
+        }
     }
 }
