@@ -7,7 +7,7 @@
     <groupId>com.roamsys.opensource</groupId>
     <artifactId>swaggerapi</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2-SNAPSHOT</version>
     <organization>
         <name>ROAMSYS S.A.</name>
         <url>http://www.roamsys.com</url>
