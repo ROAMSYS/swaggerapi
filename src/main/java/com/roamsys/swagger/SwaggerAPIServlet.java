@@ -111,11 +111,15 @@ public class SwaggerAPIServlet extends HttpServlet {
         } else {
 
             // Define base path
-            final int bashPathEndPos = path.indexOf("/", 1);
-            if (bashPathEndPos == -1) {
+            final int basePathEndPos = path.indexOf("/", 1);
+            if (basePathEndPos == -1) {
                 config.getExceptionHandler().handleException(response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid base URL", null);
                 return;
             }
+            
+            // initialize for maybe no match 
+            boolean matchFound = false;
+            
             final String basePath = path.substring(0, path.indexOf("/", 1));
             if (config.isAPIModelPath(basePath)) {
                 for (final SwaggerAPIModelData api : config.getAPIsFor(basePath)) {
@@ -123,6 +127,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                     if (api.hasHTTPMethod(method)) {
                         final Matcher m = api.matchPath(path);
                         if (m.matches()) {
+                            matchFound = true;
                             response.setStatus(HttpServletResponse.SC_OK);
 
                             // Set up variables for parameter collection
@@ -179,6 +184,9 @@ public class SwaggerAPIServlet extends HttpServlet {
                         }
                     }
                 }
+            }
+            if (!matchFound) {
+                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_NOT_IMPLEMENTED, "Called method does not exist", null);
             }
         }
 
