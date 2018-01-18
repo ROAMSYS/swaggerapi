@@ -25,7 +25,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * The Swagger API servlet
+ * The Swagger API servlet.
  *
  * @author johanna
  */
@@ -66,7 +66,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                 config.setExceptionHandler((SwaggerExceptionHandler) clazz.newInstance());
             } catch (final Exception ex) {
                 //log error with default exception handler
-                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST, "Could not instantiate Swagger exception handler [" + exceptionHandlerClass + "]. Default exception handler will be used.", ex);
+                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Could not instantiate Swagger exception handler [" + exceptionHandlerClass + "]. Default exception handler will be used.", ex);
             }
         }
 
@@ -86,7 +86,7 @@ public class SwaggerAPIServlet extends HttpServlet {
          * try to authenticate the API call
          */
         if (config.getAuthorizationHandler() != null && !config.getAuthorizationHandler().isRequestAuthorized(request, response)) {
-            config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid authorization key", null);
+            config.getExceptionHandler().handleException(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid authorization key", null);
             return;
         }
 
@@ -111,11 +111,15 @@ public class SwaggerAPIServlet extends HttpServlet {
         } else {
 
             // Define base path
-            final int bashPathEndPos = path.indexOf("/", 1);
-            if (bashPathEndPos == -1) {
-                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid base URL", null);
+            final int basePathEndPos = path.indexOf("/", 1);
+            if (basePathEndPos == -1) {
+                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid base URL", null);
                 return;
             }
+            
+            // initialize for maybe no match 
+            boolean matchFound = false;
+            
             final String basePath = path.substring(0, path.indexOf("/", 1));
             if (config.isAPIModelPath(basePath)) {
                 for (final SwaggerAPIModelData api : config.getAPIsFor(basePath)) {
@@ -123,6 +127,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                     if (api.hasHTTPMethod(method)) {
                         final Matcher m = api.matchPath(path);
                         if (m.matches()) {
+                            matchFound = true;
                             response.setStatus(HttpServletResponse.SC_OK);
 
                             // Set up variables for parameter collection
@@ -158,7 +163,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                                             arguments[i] = convertParamToArgument(paramData.getDataType(), IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8));
                                     }
                                 } catch (final ParseException ex) {
-                                    config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST, "Invalid value for parameter " + paramData.getName(), ex);
+                                    config.getExceptionHandler().handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid value for parameter " + paramData.getName(), ex);
                                     return;
                                 }
                             }
@@ -167,18 +172,21 @@ public class SwaggerAPIServlet extends HttpServlet {
                             try {
                                 api.getMethod().invoke(api.getAPIModelClass(), arguments);
                             } catch (final IllegalAccessException ex) {
-                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST, "Called method is not visible", ex);
+                                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Called method is not visible", ex);
                             } catch (final IllegalArgumentException ex) {
-                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_NOT_ACCEPTABLE, "Illegal parameters for called method. See server error log for details.", ex);
+                                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_NOT_ACCEPTABLE, "Illegal parameters for called method. See server error log for details.", ex);
                             } catch (final InvocationTargetException ex) {
-                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST, "Error calling method. See server error log for details.", ex);
+                                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Error calling method. See server error log for details.", ex);
                             } catch (final Throwable ex) {
-                                config.getExceptionHandler().handleException(this, response, HttpServletResponse.SC_BAD_REQUEST, "Internal server error for called method. See server error log for details.", ex);
+                                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Internal server error for called method. See server error log for details.", ex);
                             }
                             break;
                         }
                     }
                 }
+            }
+            if (!matchFound) {
+                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_NOT_IMPLEMENTED, "Called method does not exist", null);
             }
         }
 
