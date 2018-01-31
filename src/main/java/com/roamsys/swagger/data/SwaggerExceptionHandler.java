@@ -1,6 +1,5 @@
 package com.roamsys.swagger.data;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -16,7 +15,7 @@ public interface SwaggerExceptionHandler {
     public static final SwaggerExceptionHandler DEFAULT = new SwaggerExceptionHandler() {
 
         @Override
-        public void handleException(final HttpServlet servlet, final HttpServletResponse response, final int code, final String message, final Throwable ex) {
+        public void handleException(final HttpServletResponse response, final int code, final String message, final Throwable ex) {
             System.err.println("Error: " + message + ", status code: " + code);
             if (ex != null) {
                 ex.printStackTrace(System.err);
@@ -28,12 +27,11 @@ public interface SwaggerExceptionHandler {
     /**
      * Handles an exception.
      *
-     * @param servlet the servlet
      * @param response the response
      * @param code the HTTP response code
      * @param message the exception message
      * @param ex the exception
      */
-    public void handleException(final HttpServlet servlet, final HttpServletResponse response, final int code, final String message, final Throwable ex);
+    public void handleException(final HttpServletResponse response, final int code, final String message, final Throwable ex);
 
 }
