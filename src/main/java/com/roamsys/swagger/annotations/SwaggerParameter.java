@@ -50,6 +50,7 @@ public @interface SwaggerParameter {
         FLOAT("float"),
         DOUBLE("double"),
         BYTE("byte"),
+        FILE("file"),
         DATETIME("dateTime");
 
         private final String name;
