@@ -20,7 +20,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -226,7 +225,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                     return dateTimeFormat.parse(URLDecoder.decode(paramValue, StandardCharsets.UTF_8.name()));
                 }
             default:
-                throw new NotImplementedException("Handling for data type \"" + dataType.name() + "\" not yet implemented.");
+                throw new IllegalArgumentException("Handling for data type \"" + dataType.name() + "\" not yet implemented.");
         }
     }
 
