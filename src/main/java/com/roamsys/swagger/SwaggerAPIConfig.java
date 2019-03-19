@@ -1,17 +1,11 @@
 package com.roamsys.swagger;
 
-import org.apache.commons.lang.StringUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import com.roamsys.swagger.annotations.SwaggerApi;
 import com.roamsys.swagger.annotations.SwaggerModel;
 import com.roamsys.swagger.annotations.SwaggerParameter;
 import com.roamsys.swagger.data.SwaggerAPIModelData;
 import com.roamsys.swagger.data.SwaggerAPIParameterData;
 import com.roamsys.swagger.data.SwaggerExceptionHandler;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -20,6 +14,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.ServletContext;
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * The swagger configuration
@@ -41,12 +39,12 @@ public class SwaggerAPIConfig {
     /**
      * The map that holds all swagger API data with their path as identifier
      */
-    final private Map<String, List<SwaggerAPIModelData>> swaggerAPIs = new HashMap<String, List<SwaggerAPIModelData>>();
+    final private Map<String, List<SwaggerAPIModelData>> swaggerAPIs = new HashMap<>();
 
     /**
      * The map that holds all swagger API definitions with their path as identifier
      */
-    final private Map<String, List<String>> resourcesAPIDefs = new HashMap<String, List<String>>();
+    final private Map<String, List<String>> resourcesAPIDefs = new HashMap<>();
 
     /**
      * The basic JSON for API documentation (data for resource.json)
@@ -101,7 +99,7 @@ public class SwaggerAPIConfig {
         this.servletContext = servletContext;
 
         resources = new JSONObject();
-        resourcesAPIs = new HashMap<String, JSONObject>();
+        resourcesAPIs = new HashMap<>();
     }
 
     /**
@@ -146,7 +144,7 @@ public class SwaggerAPIConfig {
                         // fetch annotations for the method's parameters and prepare the data structures for them
                         final Annotation[][] annotations = method.getParameterAnnotations();
                         final JSONArray parameters = new JSONArray();
-                        final ArrayList<SwaggerAPIParameterData> paramData = new ArrayList<SwaggerAPIParameterData>(annotations.length);
+                        final ArrayList<SwaggerAPIParameterData> paramData = new ArrayList<>(annotations.length);
 
                         // create the resource.json content for the method parameters and add the parameter types to the data structure
                         for (final Annotation[] param : annotations) {

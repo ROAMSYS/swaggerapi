@@ -20,9 +20,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.CharEncoding;
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * The Swagger API servlet.
@@ -116,10 +115,10 @@ public class SwaggerAPIServlet extends HttpServlet {
                 config.getExceptionHandler().handleException(response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid base URL", null);
                 return;
             }
-            
-            // initialize for maybe no match 
+
+            // initialize for maybe no match
             boolean matchFound = false;
-            
+
             final String basePath = path.substring(0, path.indexOf("/", 1));
             if (config.isAPIModelPath(basePath)) {
                 for (final SwaggerAPIModelData api : config.getAPIsFor(basePath)) {
@@ -224,7 +223,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                     return dateTimeFormat.parse(paramValue);
                 } catch (final ParseException ex) {
                     // Swagger UI will encode the URL - let's try with decoded value again
-                    return dateTimeFormat.parse(URLDecoder.decode(paramValue, CharEncoding.UTF_8));
+                    return dateTimeFormat.parse(URLDecoder.decode(paramValue, StandardCharsets.UTF_8.name()));
                 }
             default:
                 throw new NotImplementedException("Handling for data type \"" + dataType.name() + "\" not yet implemented.");
@@ -268,7 +267,7 @@ public class SwaggerAPIServlet extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         response.flushBuffer();
     }
-    
+
     @Override
     protected void service(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         try {
