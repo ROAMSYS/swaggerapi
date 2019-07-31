@@ -61,7 +61,7 @@ public class SwaggerAPIServlet extends HttpServlet {
         if (!StringUtils.isEmpty(exceptionHandlerClass)) {
             try {
                 final Class<?> clazz = Class.forName(exceptionHandlerClass);
-                config.setExceptionHandler((SwaggerExceptionHandler) clazz.newInstance());
+                config.setExceptionHandler((SwaggerExceptionHandler) clazz.getConstructor().newInstance());
             } catch (final Exception ex) {
                 //log error with default exception handler
                 config.getExceptionHandler().handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Could not instantiate Swagger exception handler [" + exceptionHandlerClass + "]. Default exception handler will be used.", ex);
