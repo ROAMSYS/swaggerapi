@@ -7,7 +7,7 @@
     <groupId>com.roamsys.opensource</groupId>
     <artifactId>swaggerapi</artifactId>
     <packaging>jar</packaging>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
     <organization>
         <name>ROAMSYS S.A.</name>
         <url>http://www.roamsys.com</url>
@@ -39,7 +39,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <version>4.13</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
