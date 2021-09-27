@@ -19,10 +19,22 @@ public @interface SwaggerApi {
      */
     public enum HTTPMethod {
 
-        GET,
-        POST,
-        PUT,
-        DELETE;
+        GET("get"),
+        POST("post"),
+        PUT("put"),
+        DELETE("delete");
+
+        private final String name;
+
+        private HTTPMethod(final String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+
     }
 
     /**
@@ -51,8 +63,8 @@ public @interface SwaggerApi {
      *
      * @return implementation notes as string
      */
-    String notes();    
-    
+    String notes();
+
     /**
      * The description for the implementation notes
      *

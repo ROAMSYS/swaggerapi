@@ -26,8 +26,8 @@ public class SwaggerAPIDefaultAuthorizationHandler implements SwaggerAPIAuthoriz
 
     @Override
     public boolean isRequestAuthorized(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-        final String requestAPIKeyParam = request.getParameter("api_key");
-        return requestAPIKeyParam != null && requestAPIKeyParam.equals(apiKey);
+        final String requestAPIKey = resolveApiKey(request);
+        return requestAPIKey != null && requestAPIKey.equals(apiKey);
     }
 
 }

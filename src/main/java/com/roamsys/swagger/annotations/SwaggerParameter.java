@@ -45,13 +45,13 @@ public @interface SwaggerParameter {
         STRING("string"),
         INTEGER("integer"),
         DATE("date"),
+        DATETIME("dateTime"),
         BOOLEAN("boolean"),
         LONG("long"),
         FLOAT("float"),
         DOUBLE("double"),
         BYTE("byte"),
-        FILE("file"),
-        DATETIME("dateTime");
+        FILE("file");
 
         private final String name;
 
