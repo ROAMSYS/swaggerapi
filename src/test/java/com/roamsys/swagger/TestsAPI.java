@@ -16,13 +16,13 @@ public class TestsAPI implements SwaggerAPIModel {
     public static final String PATH_TEST_ORGANISATION_AFTER_DATE = "/test/{organisationidList}/after/{date}";
     public static final String PATH_TEST_ORGANISATION_TADIG = "/test/{organisationidList}/{tadigList}";
 
-    @SwaggerApi(method = SwaggerApi.HTTPMethod.GET, path = PATH_TEST_ORGANISATION, summary = "", notes = "")
+    @SwaggerApi(method = SwaggerApi.HTTPMethod.GET, path = PATH_TEST_ORGANISATION, summary = "", notes = "Test org method description")
     public void test_Org(final SwaggerAPIContext context,
             @SwaggerParameter(name = "organisationidList", description = "", required = true, paramType = ParamType.PATH, dataType = DataType.STRING) final String organisationidList) {
         //Do nothing
     }
 
-    @SwaggerApi(method = SwaggerApi.HTTPMethod.GET, path = PATH_TEST, summary = "", notes = "")
+    @SwaggerApi(method = SwaggerApi.HTTPMethod.GET, path = PATH_TEST, summary = "", notes = "Test method description")
     public void test(final SwaggerAPIContext context) {
         //Do nothing
     }
