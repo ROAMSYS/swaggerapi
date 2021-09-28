@@ -1,5 +1,6 @@
 package com.roamsys.swagger;
 
+import com.google.gson.GsonBuilder;
 import com.roamsys.swagger.annotations.SwaggerApi.HTTPMethod;
 import com.roamsys.swagger.annotations.SwaggerParameter.DataType;
 import com.roamsys.swagger.data.ContentType;
@@ -13,7 +14,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -72,7 +73,7 @@ public class SwaggerAPIServlet extends HttpServlet {
         if (config.isCrossOriginAccessAllowed()) {
             response.addHeader("Access-Control-Allow-Origin", "*");
             response.addHeader("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, UPDATE, OPTIONS");
-            response.addHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+            response.addHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With, X-Api-Key");
         }
 
         // sets the default content type, if defined in config
@@ -93,22 +94,15 @@ public class SwaggerAPIServlet extends HttpServlet {
             config.getPreRequestHandler().handle(request, response);
         }
 
-        // Basic resource.json
-        if (path == null || path.equals("") || path.equals("/") || path.equals("/resources.json")) {
+        // OpenAPI swagger.json request e.g. from Swagger UI
+        if (path.equals("/swagger.json")) {
             response.setStatus(HttpServletResponse.SC_OK);
             response.setContentType(ContentType.JSON_UTF8);
-            response.getWriter().println(config.getAPIDoc().toString());
-
-            // API models
-        } else if (config.isAPIModelPath(path)) {
-            response.setStatus(HttpServletResponse.SC_OK);
-            response.setContentType(ContentType.JSON_UTF8);
-            response.getWriter().println(config.getAPIModelFor(path));
-
-            // API method calls
+            final GsonBuilder gsonBuilder = new GsonBuilder();
+            gsonBuilder.excludeFieldsWithoutExposeAnnotation();
+            gsonBuilder.create().toJson(config.getApiSpec(), response.getWriter());
         } else {
-
-            // Define base path
+            // API method calls
             final int basePathEndPos = path.indexOf("/", 1);
             if (basePathEndPos == -1) {
                 config.getExceptionHandler().handleException(response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid base URL", null);
@@ -122,14 +116,14 @@ public class SwaggerAPIServlet extends HttpServlet {
             if (config.isAPIModelPath(basePath)) {
                 for (final SwaggerAPIModelData api : config.getAPIsFor(basePath)) {
                     // Find matching API model and method
-                    if (api.hasHTTPMethod(method)) {
+                    if (api.getHTTPMethod() == method) {
                         final Matcher m = api.matchPath(path);
                         if (m.matches()) {
                             matchFound = true;
                             response.setStatus(HttpServletResponse.SC_OK);
 
                             // Set up variables for parameter collection
-                            final ArrayList<SwaggerAPIParameterData> paramsData = api.getParameterDetails();
+                            final List<SwaggerAPIParameterData> paramsData = api.getParameters();
                             final int parameterCount = paramsData.size();
                             final Object[] arguments = new Object[parameterCount + 1];
                             arguments[0] = new SwaggerAPIContext(this, request, response, config.getExceptionHandler());
@@ -200,7 +194,7 @@ public class SwaggerAPIServlet extends HttpServlet {
      * Convert the swagger API parameter to a method argument class type
      * depending on the swagger API data type
      *
-     * @param dataType the swagger API paramter data type
+     * @param dataType the swagger API parameter data type
      * @param paramValue the value of the parameter as string
      * @return the argument
      */
@@ -256,7 +250,7 @@ public class SwaggerAPIServlet extends HttpServlet {
         if (config.isCrossOriginAccessAllowed()) {
             response.addHeader("Access-Control-Allow-Origin", "*");
             response.addHeader("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, UPDATE, OPTIONS");
-            response.addHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+            response.addHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With, X-Api-Key");
         }
 
         if (config.getDefaultContentType() != null) {

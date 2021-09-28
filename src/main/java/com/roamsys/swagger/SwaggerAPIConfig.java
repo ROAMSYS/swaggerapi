@@ -6,21 +6,20 @@ import com.roamsys.swagger.annotations.SwaggerParameter;
 import com.roamsys.swagger.data.SwaggerAPIModelData;
 import com.roamsys.swagger.data.SwaggerAPIParameterData;
 import com.roamsys.swagger.data.SwaggerExceptionHandler;
+import com.roamsys.swagger.documentation.ApiSpecBuilder;
+import com.roamsys.swagger.documentation.SwaggerApiSpec;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.servlet.ServletContext;
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
- * The swagger configuration
+ * The swagger configuration.
  *
  * @author johanna
  */
@@ -29,32 +28,22 @@ public class SwaggerAPIConfig {
     /**
      * Content type for JavaScript
      */
-    final public static String CONTENT_TYPE_JAVASCRIPT = "text/javascript";
+    public final static String CONTENT_TYPE_JAVASCRIPT = "text/javascript";
 
     /**
      * The swagger API servlet context attribute name
      */
-    final public static String SERVLET_ATTRIBUTE_NAME = "SwaggerAPIModel";
+    public final static String SERVLET_ATTRIBUTE_NAME = "SwaggerAPIModel";
 
     /**
      * The map that holds all swagger API data with their path as identifier
      */
-    final private Map<String, List<SwaggerAPIModelData>> swaggerAPIs = new HashMap<>();
+    private final Map<String, List<SwaggerAPIModelData>> swaggerAPIs = new HashMap<>();
 
     /**
-     * The map that holds all swagger API definitions with their path as identifier
+     * The builder for collecting API spec information
      */
-    final private Map<String, List<String>> resourcesAPIDefs = new HashMap<>();
-
-    /**
-     * The basic JSON for API documentation (data for resource.json)
-     */
-    final private JSONObject resources;
-
-    /**
-     * List of API doc models included in resources.json
-     */
-    final private Map<String, JSONObject> resourcesAPIs;
+    private final ApiSpecBuilder apiSpecBuilder;
 
     /**
      * Defines if cross origin access is allowed
@@ -97,9 +86,7 @@ public class SwaggerAPIConfig {
      */
     public SwaggerAPIConfig(final ServletContext servletContext) {
         this.servletContext = servletContext;
-
-        resources = new JSONObject();
-        resourcesAPIs = new HashMap<>();
+        apiSpecBuilder = new ApiSpecBuilder();
     }
 
     /**
@@ -108,80 +95,37 @@ public class SwaggerAPIConfig {
      * @param model new Swagger API model
      */
     public void registerModel(final SwaggerAPIModel model) {
-        // Check if current model is annotated with {@link SwaggerModel}
+        // check if current model is annotated with {@link SwaggerModel}
         if (model.getClass().isAnnotationPresent(SwaggerModel.class)) {
-            try {
-                final SwaggerModel modelAnnotation = model.getClass().getAnnotation(SwaggerModel.class);
-                final String modelPath = modelAnnotation.path() + "." + modelAnnotation.format();
+            final SwaggerModel modelAnnotation = model.getClass().getAnnotation(SwaggerModel.class);
+            final String modelPath = modelAnnotation.path() + "." + modelAnnotation.format();
 
-                // add model only once
-                if (!resourcesAPIs.containsKey(modelPath) && modelAnnotation.format().equals("json")) {
-                    final JSONObject resourceModel = new JSONObject();
-                    resourceModel.put("path", modelAnnotation.path() + ".{format}");
-                    if (!modelAnnotation.description().isEmpty()) {
-                        resourceModel.put("description", modelAnnotation.description());
-                    }
-                    resourcesAPIs.put(modelPath, resourceModel);
-                }
+            for (final Method method : model.getClass().getMethods()) {
+                if (method.isAnnotationPresent(SwaggerApi.class)) {
 
-                for (final Method method : model.getClass().getMethods()) {
-                    if (method.isAnnotationPresent(SwaggerApi.class)) {
+                    // fetch Swagger annotations for the method and it's parameters and prepare the data structures for them
+                    final SwaggerApi annotation = method.getAnnotation(SwaggerApi.class);
+                    final Annotation[][] annotations = method.getParameterAnnotations();
+                    final List<SwaggerParameter> paramAnnotations = new ArrayList<>(annotations.length);
 
-                        // fetch Swagger API annotations and make sure that the hash maps are prepared for the base path of API
-                        final SwaggerApi annotation = method.getAnnotation(SwaggerApi.class);
-                        if (!swaggerAPIs.containsKey(modelPath)) {
-                            swaggerAPIs.put(modelPath, new LinkedList<SwaggerAPIModelData>());
-                            resourcesAPIDefs.put(modelPath, new LinkedList<String>());
-                        }
-
-                        // create resource.json content for the API call corresponding to the class method
-                        final JSONObject operation = new JSONObject();
-                        operation.put("httpMethod", annotation.method());
-                        operation.put("summary", annotation.summary());
-                        operation.put("nickname", method.getDeclaringClass().getSimpleName() + "_" + method.getName());
-                        operation.put("notes", annotation.notes());
-
-                        // fetch annotations for the method's parameters and prepare the data structures for them
-                        final Annotation[][] annotations = method.getParameterAnnotations();
-                        final JSONArray parameters = new JSONArray();
-                        final ArrayList<SwaggerAPIParameterData> paramData = new ArrayList<>(annotations.length);
-
-                        // create the resource.json content for the method parameters and add the parameter types to the data structure
-                        for (final Annotation[] param : annotations) {
-                            for (final Annotation currentParamAnnotation : param) {
-                                if (currentParamAnnotation.annotationType().equals(SwaggerParameter.class)) {
-                                    final SwaggerParameter paramAnnotaion = (SwaggerParameter) currentParamAnnotation;
-                                    paramData.add(new SwaggerAPIParameterData(paramAnnotaion.name(), paramAnnotaion.paramType(), paramAnnotaion.dataType()));
-
-                                    final JSONObject currentParam = new JSONObject();
-                                    currentParam.put("name", paramAnnotaion.name());
-                                    currentParam.put("required", paramAnnotaion.required());
-                                    currentParam.put("allowMultiple", paramAnnotaion.allowMultiple());
-                                    currentParam.put("dataType", paramAnnotaion.dataType());
-                                    currentParam.put("description", paramAnnotaion.description());
-                                    currentParam.put("paramType", paramAnnotaion.paramType());
-                                    parameters.put(currentParam);
-                                }
+                    // collect the parameter annotations
+                    for (final Annotation[] param : annotations) {
+                        for (final Annotation currentParamAnnotation : param) {
+                            if (currentParamAnnotation.annotationType().equals(SwaggerParameter.class)) {
+                                final SwaggerParameter paramAnnotaion = (SwaggerParameter) currentParamAnnotation;
+                                paramAnnotations.add(paramAnnotaion);
                             }
                         }
-                        operation.put("parameters", parameters);
-
-                        // add the data structure with the collected information to the list of APIs for the current base path
-                        final String path = modelPath + annotation.path();
-                        swaggerAPIs.get(modelPath).add(new SwaggerAPIModelData(model, method, annotation.method(), path, paramData));
-
-                        // create the resource.json content for the collection information
-                        final JSONObject api = new JSONObject();
-                        api.put("operations", new JSONArray().put(operation));
-                        api.put("path", path);
-                        if (!annotation.description().isEmpty()) {
-                            api.put("description", annotation.description());
-                        }
-                        resourcesAPIDefs.get(modelPath).add(api.toString());
                     }
+
+                    // add the data structure with the collected information to the list of APIs for the current base path
+                    final String path = modelPath + annotation.path();
+                    final List<SwaggerAPIParameterData> parameters = paramAnnotations.stream().map(a -> new SwaggerAPIParameterData(a.name(), a.paramType(), a.dataType())).collect(Collectors.toList());
+                    swaggerAPIs.computeIfAbsent(modelPath, p -> new ArrayList<>()).add(new SwaggerAPIModelData(model, method, annotation.method(), path, parameters));
+
+                    // add the API operation to spec
+                    apiSpecBuilder.addOperation(modelAnnotation, annotation, paramAnnotations);
                 }
-            } catch (final JSONException ex) {
-                throw new IllegalArgumentException("Error accessing JSON", ex);
             }
         }
     }
@@ -197,36 +141,23 @@ public class SwaggerAPIConfig {
     }
 
     /**
-     * Returns the API model for the current API path
+     * Get the OpenAPI spec for the configured models.
      *
-     * @param path the path that defines the API model
-     * @return JSON
+     * @return the API spec
      */
-    public String getAPIModelFor(final String path) {
-        return "{\"apis\": [" + StringUtils.join(resourcesAPIDefs.get(path), ", ") + "]}";
+    public SwaggerApiSpec getApiSpec() {
+        return apiSpecBuilder.getApiSpec();
     }
 
     /**
-     * Adds a value to the resources JSON
-     * @param key the property key
-     * @param value the value
-     */
-    private void addToResourcesJSON(final String key, final String value) {
-        try {
-            resources.put(key, value);
-        } catch (final JSONException ex) {
-            throw new IllegalArgumentException("Error accessing JSON", ex);
-        }
-    }
-
-    /**
-     * The root URL serving the API. This field is important as while it is common to have the Resource Listing and API
+     * Sets the URL serving the API. This field is important for completing the OpenAPI specification.
      * Declarations on the server providing the APIs themselves, it is not a requirement.
      *
      * @param basePath The value should be in the format of a URL.
      */
-    public void setBasePath(final String basePath) {
-        addToResourcesJSON("basePath", basePath.endsWith("/") ? basePath : basePath + '/');
+    public void setURL(final URL apiUrl) {
+        apiSpecBuilder.setHost(apiUrl.getHost());
+        apiSpecBuilder.setBasePath(apiUrl.getPath());
     }
 
     /**
@@ -235,27 +166,26 @@ public class SwaggerAPIConfig {
      * @param apiVersion the API version as string
      */
     public void setAPIVersion(final String apiVersion) {
-        addToResourcesJSON("apiVersion", apiVersion);
+        apiSpecBuilder.setVersion(apiVersion);
     }
 
     /**
-     * Specifies the Swagger Specification version being used. It can be used by the Swagger UI and other clients to
-     * interpret the API listing.
-     *
-     * @param swaggerVersion The value MUST be an existing Swagger specification version
-     */
-    public void setSwaggerVersion(final String swaggerVersion) {
-        addToResourcesJSON("swaggerVersion", swaggerVersion);
-    }
-
-    /**
-     * Provides metadata about the API. The metadata can be used by the clients if needed, and can be presented in the
+     * Provides title metadata about the API. The title can be used by the clients if needed, and can be presented in the
      * Swagger-UI for convenience.
      *
      * @param info the swagger metadata info as string
      */
-    public void setInfo(final String info) {
-        addToResourcesJSON("info", info);
+    public void setTitle(final String title) {
+        apiSpecBuilder.setTitle(title);
+    }
+
+    /**
+     * Provides description metadata about the API. This field is important for completing the OpenAPI specification.
+     *
+     * @param info the swagger metadata info as string
+     */
+    public void setDescription(final String description) {
+        apiSpecBuilder.setDescription(description);
     }
 
     /**
@@ -264,20 +194,6 @@ public class SwaggerAPIConfig {
      */
     public ServletContext getServletContext() {
         return servletContext;
-    }
-
-    /**
-     * Returns the basic JSON containing the API data for resource.json
-     *
-     * @return resources JSON object
-     */
-    public JSONObject getAPIDoc() {
-        try {
-            resources.put("apis", resourcesAPIs.values());
-        } catch (final JSONException ex) {
-            throw new IllegalArgumentException("Error accessing JSON", ex);
-        }
-        return resources;
     }
 
     /**
