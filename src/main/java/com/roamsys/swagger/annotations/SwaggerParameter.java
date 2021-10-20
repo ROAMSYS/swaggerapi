@@ -41,17 +41,12 @@ public @interface SwaggerParameter {
      * Enum constants for parameter date types
      */
     public enum DataType {
-        DATA("data"),
         STRING("string"),
         INTEGER("integer"),
-        DATE("date"),
-        DATETIME("dateTime"),
-        BOOLEAN("boolean"),
         LONG("long"),
-        FLOAT("float"),
-        DOUBLE("double"),
-        BYTE("byte"),
-        FILE("file");
+        BOOLEAN("boolean"),
+        DATE("date"),
+        DATETIME("dateTime");
 
         private final String name;
 

@@ -122,14 +122,10 @@ The parameters used in the URL must annotated with the @SwaggerParameter annotat
 * **dataType** - The data type of the parameter
      * *STRING*
      * *INTEGER*
-     * *DATE*
+     * *LONG* 
      * *BOOLEAN*
-     * *FLOAT*
-     * *DOUBLE*
-     * *BYTE*
+     * *DATE*
      * *DATETIME*
-
-**Note:** At the moment not all *dataType*s and *paramType*s are supported. But feel free to fix that.
 
 ## Documentation support
 

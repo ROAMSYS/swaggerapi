@@ -18,7 +18,7 @@
     "/testAPI.json/test": {
       "get": {
         "summary": "",
-        "operationId": "testAPItest",
+        "operationId": "get-testAPI-test",
         "tags": [
           "testAPI"
         ],

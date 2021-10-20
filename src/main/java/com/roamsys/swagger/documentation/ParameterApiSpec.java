@@ -11,7 +11,7 @@ import java.util.Map;
 public class ParameterApiSpec extends AbstractApiSpecPart {
 
     @Expose
-    String name, in;
+    String name, in, format;
 
     @Expose
     boolean required;
