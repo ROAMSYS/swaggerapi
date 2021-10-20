@@ -3,7 +3,6 @@ package com.roamsys.swagger;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import org.json.JSONObject;
 
 /**
  * The swagger API listener to be executed on startup
@@ -21,8 +20,7 @@ public abstract class SwaggerAPIListener implements ServletContextListener {
 
         System.out.print("Initializing Swagger API components ... ");
         initialize(model);
-        final JSONObject config = model.getAPIDoc();
-        System.out.println("done. => " + config.toString());
+        System.out.println("done. => " + model.getApiSpec().toString());
     }
 
     @Override

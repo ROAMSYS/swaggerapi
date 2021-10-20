@@ -122,14 +122,21 @@ The parameters used in the URL must annotated with the @SwaggerParameter annotat
 * **dataType** - The data type of the parameter
      * *STRING*
      * *INTEGER*
-     * *DATE*
+     * *LONG* 
      * *BOOLEAN*
-     * *FLOAT*
-     * *DOUBLE*
-     * *BYTE*
+     * *DATE*
      * *DATETIME*
 
-**Note:** At the moment not all *dataType*s and *paramType*s are supported. But feel free to fix that.
+## Documentation support
+
+The support for Swagger UI has been changed since Release 5:
+* Former versions support the Swagger UI version 1.x (aka resource.json).
+* The current version now supports Swagger UI version 2.0 which is also known as *OpenAPI* framework.
+
+The following URL may be used for getting the OpenAPI specification based on the annotation information defined on class and method level:
+`https://<host>/<base path>/swagger.json`
+
+The API key has to be specified as URL parameter 'api_key' or as header field 'X-Api-Key'. 
 
 ## License
 

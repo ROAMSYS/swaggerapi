@@ -3,7 +3,7 @@ package com.roamsys.swagger.data;
 import com.roamsys.swagger.SwaggerAPIModel;
 import com.roamsys.swagger.annotations.SwaggerApi.HTTPMethod;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,10 +22,10 @@ public class SwaggerAPIModelData {
      * The reflection method
      */
     private final Method method;
-    /**
+     /**
      * The path pattern
      */
-    private final Pattern path;
+    private final Pattern pathPattern;
 
     /**
      * HTTP method type
@@ -35,12 +35,12 @@ public class SwaggerAPIModelData {
     /**
      * Parameter data
      */
-    private final ArrayList<SwaggerAPIParameterData> paramData;
+    private final List<SwaggerAPIParameterData> parameters;
 
     /**
      * The standard parameter pattern
      */
-    final private static String PATTERN = "\\{[0-9a-zA-Z]+\\}";
+    private static final String PATTERN = "\\{[0-9a-zA-Z]+\\}";
 
     /**
      * Creates a new wrapper for swagger API
@@ -49,14 +49,14 @@ public class SwaggerAPIModelData {
      * @param method the method
      * @param httpMethod the HTTP method
      * @param path the entire path of the API method
-     * @param paramData the detailed data for the method parameters
+     * @param parameters the detailed data for the method parameters
      */
-    public SwaggerAPIModelData(final SwaggerAPIModel modelClass, final Method method, final HTTPMethod httpMethod, final String path, final ArrayList<SwaggerAPIParameterData> paramData) {
+    public SwaggerAPIModelData(final SwaggerAPIModel modelClass, final Method method, final HTTPMethod httpMethod, final String path, final List<SwaggerAPIParameterData> parameters) {
         this.modelClass = modelClass;
         this.method = method;
         this.httpMethod = httpMethod;
-        this.path = Pattern.compile(path.replaceAll(PATTERN, "(\\[^/\\]+)"));
-        this.paramData = paramData;
+        this.pathPattern = Pattern.compile(path.replaceAll(PATTERN, "(\\[^/\\]+)"));
+        this.parameters = parameters;
     }
 
     /**
@@ -66,23 +66,22 @@ public class SwaggerAPIModelData {
      * @return matcher
      */
     public Matcher matchPath(final String path) {
-        return this.path.matcher(path);
+        return this.pathPattern.matcher(path);
     }
 
     /**
-     * Returns if given method equals HTTP method of current swagger API
+     * Returns the HTTP method of current swagger API
      *
-     * @param method HTTP method
-     * @return true if given method equals HTTP method of swagger API
+     * @return HTTP method
      */
-    public boolean hasHTTPMethod(final HTTPMethod method) {
-        return httpMethod == method;
+    public HTTPMethod getHTTPMethod() {
+        return httpMethod;
     }
 
     /**
      * Returns the reflection method of current swagger API
      *
-     * @return method
+     * @return reflection method
      */
     public Method getMethod() {
         return method;
@@ -102,7 +101,8 @@ public class SwaggerAPIModelData {
      *
      * @return parameter details
      */
-    public ArrayList<SwaggerAPIParameterData> getParameterDetails() {
-        return paramData;
+    public List<SwaggerAPIParameterData> getParameters() {
+        return parameters;
     }
+
 }
