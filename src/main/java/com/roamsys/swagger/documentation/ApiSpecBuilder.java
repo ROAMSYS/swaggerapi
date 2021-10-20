@@ -141,7 +141,7 @@ public class ApiSpecBuilder {
     private OperationApiSpec createOperatorSpec(final String modelName, final SwaggerModel modelAnnotation, final SwaggerApi apiAnnotation, final List<SwaggerParameter> parameterAnnotations) {
         final OperationApiSpec operationSpec = new OperationApiSpec();
         operationSpec.description = apiAnnotation.description().isEmpty() ? apiAnnotation.notes() : String.format("\n%s\n*Notes: %s*", apiAnnotation.description(), apiAnnotation.notes());
-        operationSpec.operationId = modelName + cleanupPath(apiAnnotation.path());
+        operationSpec.operationId = String.format("%s-%s-%s", apiAnnotation.method().toString(), modelName, cleanupPath(apiAnnotation.path()));
         operationSpec.tags = Collections.singletonList(modelName);
         operationSpec.produces = Collections.singletonList("application/" + modelAnnotation.format());
         operationSpec.summary = apiAnnotation.summary();
@@ -165,18 +165,20 @@ public class ApiSpecBuilder {
         parameterSpec.required = parameterAnnotation.required();
         parameterSpec.description = parameterAnnotation.description();
         parameterSpec.in = parameterAnnotation.paramType().toString();
-        switch (parameterAnnotation.dataType()) {
-            case DATA:
-                parameterSpec.schema = DEFAULT_OBJECT_SCHEMA;
-                break;
-            case DATE:
-            case DATETIME:
-                // Date is not a known type in OpenAPI/JSON
-                parameterSpec.type = SwaggerParameter.DataType.STRING.toString();
-                break;
-            default:
-                parameterSpec.type = parameterAnnotation.dataType().toString();
-                break;
+        if (parameterAnnotation.paramType() == SwaggerParameter.ParamType.BODY) {
+            parameterSpec.schema = DEFAULT_OBJECT_SCHEMA;
+        } else {
+            switch (parameterAnnotation.dataType()) {
+                case DATE:
+                case DATETIME:
+                    // Date is not a known type in OpenAPI/JSON
+                    parameterSpec.type = SwaggerParameter.DataType.STRING.toString();
+                    parameterSpec.format = parameterAnnotation.dataType() == SwaggerParameter.DataType.DATETIME ? "date-time" : "date";
+                    break;
+                default:
+                    parameterSpec.type = parameterAnnotation.dataType().toString();
+                    break;
+            }
         }
         return parameterSpec;
     }

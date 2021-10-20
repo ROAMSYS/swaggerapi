@@ -20,7 +20,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -151,8 +150,12 @@ public class SwaggerAPIServlet extends HttpServlet {
                                             arguments[i] = request.getInputStream();
                                             break;
 
+                                        case HEADER:
+                                            arguments[i] = convertParamToArgument(paramData.getDataType(),request.getHeader(paramData.getName()));
+                                            break;
+
                                         default:
-                                            arguments[i] = convertParamToArgument(paramData.getDataType(), IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8));
+                                            throw new IllegalArgumentException("Handling for parameter type \"" + paramData.getParamType().name() + "\" not yet implemented.");
                                     }
                                 } catch (final ParseException ex) {
                                     config.getExceptionHandler().handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid value for parameter " + paramData.getName(), ex);
