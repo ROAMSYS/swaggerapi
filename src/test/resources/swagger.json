@@ -1,0 +1,43 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Swagger API"
+  },
+  "basePath": "/",
+  "schemes": [
+    "https"
+  ],
+  "securityDefinitions": {
+    "api_key": {
+      "type": "apiKey",
+      "name": "x-api-key",
+      "in": "header"
+    }
+  },
+  "paths": {
+    "/testAPI.json/test": {
+      "get": {
+        "summary": "",
+        "operationId": "get-testAPI-test",
+        "tags": [
+          "testAPI"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "403": {
+            "description": "authentication failed"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "description": "Test method description"
+      }
+    }
+  }
+}
