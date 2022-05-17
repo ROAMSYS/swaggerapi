@@ -10,8 +10,6 @@ import com.roamsys.swagger.data.SwaggerAPIParameterData;
 import com.roamsys.swagger.data.SwaggerExceptionHandler;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -53,19 +51,25 @@ public class SwaggerAPIServlet extends HttpServlet {
     protected void processRequest(final HttpServletRequest request, final HttpServletResponse response, final HTTPMethod method) throws ServletException, IOException {
         final SwaggerAPIConfig config = (SwaggerAPIConfig) request.getSession().getServletContext().getAttribute(SwaggerAPIConfig.SERVLET_ATTRIBUTE_NAME);
 
-        final String uri = request.getRequestURI();
-        final String path = uri.substring(request.getContextPath().length() + request.getServletPath().length(), uri.length());
-
         // register exception handler for API
         final String exceptionHandlerClass = getServletConfig().getInitParameter("exceptionHandler");
+        SwaggerExceptionHandler exceptionHandler = config.getExceptionHandler();
         if (!StringUtils.isEmpty(exceptionHandlerClass)) {
             try {
                 final Class<?> clazz = Class.forName(exceptionHandlerClass);
-                config.setExceptionHandler((SwaggerExceptionHandler) clazz.getConstructor().newInstance());
+                exceptionHandler = (SwaggerExceptionHandler) clazz.getConstructor().newInstance();
+                config.setExceptionHandler(exceptionHandler);
             } catch (final Exception ex) {
-                //log error with default exception handler
-                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Could not instantiate Swagger exception handler [" + exceptionHandlerClass + "]. Default exception handler will be used.", ex);
+                // log error with default exception handler
+                exceptionHandler.handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Could not instantiate Swagger exception handler [" + exceptionHandlerClass + "]. Default exception handler will be used.", ex);
             }
+        }
+
+        // get the URL decoded path to be called
+        final String path = request.getPathInfo();
+        if (path == null) {
+            exceptionHandler.handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid empty path", null);
+            return;
         }
 
         // enables cross-origin-access, if allowed in config
@@ -80,11 +84,9 @@ public class SwaggerAPIServlet extends HttpServlet {
             response.setContentType(config.getDefaultContentType());
         }
 
-        /**
-         * try to authenticate the API call
-         */
+        // try to authenticate the API call
         if (config.getAuthorizationHandler() != null && !config.getAuthorizationHandler().isRequestAuthorized(request, response)) {
-            config.getExceptionHandler().handleException(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid authorization key", null);
+            exceptionHandler.handleException(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid authorization key", null);
             return;
         }
 
@@ -104,7 +106,7 @@ public class SwaggerAPIServlet extends HttpServlet {
             // API method calls
             final int basePathEndPos = path.indexOf("/", 1);
             if (basePathEndPos == -1) {
-                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid base URL", null);
+                exceptionHandler.handleException(response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid base URL", null);
                 return;
             }
 
@@ -116,8 +118,8 @@ public class SwaggerAPIServlet extends HttpServlet {
                 for (final SwaggerAPIModelData api : config.getAPIsFor(basePath)) {
                     // Find matching API model and method
                     if (api.getHTTPMethod() == method) {
-                        final Matcher m = api.matchPath(path);
-                        if (m.matches()) {
+                        final Matcher pathParamMatcher = api.matchPath(path);
+                        if (pathParamMatcher.matches()) {
                             matchFound = true;
                             response.setStatus(HttpServletResponse.SC_OK);
 
@@ -125,7 +127,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                             final List<SwaggerAPIParameterData> paramsData = api.getParameters();
                             final int parameterCount = paramsData.size();
                             final Object[] arguments = new Object[parameterCount + 1];
-                            arguments[0] = new SwaggerAPIContext(this, request, response, config.getExceptionHandler());
+                            arguments[0] = new SwaggerAPIContext(this, request, response, exceptionHandler);
 
                             // Collect parameters
                             int getParamIndex = 0;
@@ -136,8 +138,8 @@ public class SwaggerAPIServlet extends HttpServlet {
                                 try {
                                     switch (paramData.getParamType()) {
                                         case PATH:
-                                            if (m.groupCount() >= getParamIndex + 1) {
-                                                arguments[i] = convertParamToArgument(paramData.getDataType(), m.group(1 + getParamIndex++));
+                                            if (pathParamMatcher.groupCount() >= getParamIndex + 1) {
+                                                arguments[i] = convertParamToArgument(paramData.getDataType(), pathParamMatcher.group(1 + getParamIndex++));
                                             }
                                             break;
 
@@ -158,7 +160,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                                             throw new IllegalArgumentException("Handling for parameter type \"" + paramData.getParamType().name() + "\" not yet implemented.");
                                     }
                                 } catch (final ParseException ex) {
-                                    config.getExceptionHandler().handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid value for parameter " + paramData.getName(), ex);
+                                    exceptionHandler.handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid value for parameter " + paramData.getName(), ex);
                                     return;
                                 }
                             }
@@ -167,13 +169,13 @@ public class SwaggerAPIServlet extends HttpServlet {
                             try {
                                 api.getMethod().invoke(api.getAPIModelClass(), arguments);
                             } catch (final IllegalAccessException ex) {
-                                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Called method is not visible", ex);
+                                exceptionHandler.handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Called method is not visible", ex);
                             } catch (final IllegalArgumentException ex) {
-                                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_NOT_ACCEPTABLE, "Illegal parameters for called method. See server error log for details.", ex);
+                                exceptionHandler.handleException(response, HttpServletResponse.SC_NOT_ACCEPTABLE, "Illegal parameters for called method. See server error log for details.", ex);
                             } catch (final InvocationTargetException ex) {
-                                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Error calling method. See server error log for details.", ex);
+                                exceptionHandler.handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Error calling method. See server error log for details.", ex);
                             } catch (final Throwable ex) {
-                                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Internal server error for called method. See server error log for details.", ex);
+                                exceptionHandler.handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Internal server error for called method. See server error log for details.", ex);
                             }
                             break;
                         }
@@ -181,7 +183,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                 }
             }
             if (!matchFound) {
-                config.getExceptionHandler().handleException(response, HttpServletResponse.SC_NOT_IMPLEMENTED, "Called method does not exist", null);
+                exceptionHandler.handleException(response, HttpServletResponse.SC_NOT_IMPLEMENTED, "Called method does not exist", null);
             }
         }
 
@@ -194,35 +196,32 @@ public class SwaggerAPIServlet extends HttpServlet {
     }
 
     /**
-     * Convert the swagger API parameter to a method argument class type
-     * depending on the swagger API data type
+     * Convert the swagger API parameter to a method argument class type depending on the swagger API data type.
      *
      * @param dataType the swagger API parameter data type
      * @param paramValue the value of the parameter as string
      * @return the argument
      */
     private Object convertParamToArgument(final DataType dataType, final String paramValue) throws ParseException, IOException {
-        switch (dataType) {
-            case STRING:
-                return paramValue;
-            case INTEGER:
-                return Integer.parseInt(paramValue);
-            case LONG:
-                return Long.parseLong(paramValue);
-            case BOOLEAN:
-                return Boolean.valueOf(paramValue);
-            case DATE:
-                return new SimpleDateFormat(DATE_FORMAT).parse(paramValue);
-            case DATETIME:
-                final SimpleDateFormat dateTimeFormat = new SimpleDateFormat(DATE_TIME_FORMAT);
-                try {
-                    return dateTimeFormat.parse(paramValue);
-                } catch (final ParseException ex) {
-                    // Swagger UI will encode the URL - let's try with decoded value again
-                    return dateTimeFormat.parse(URLDecoder.decode(paramValue, StandardCharsets.UTF_8.name()));
-                }
-            default:
-                throw new IllegalArgumentException("Handling for data type \"" + dataType.name() + "\" not yet implemented.");
+        if (StringUtils.isEmpty(paramValue)) {
+            return null;
+        } else {
+            switch (dataType) {
+                case STRING:
+                    return paramValue;
+                case INTEGER:
+                    return Integer.parseInt(paramValue);
+                case LONG:
+                    return Long.parseLong(paramValue);
+                case BOOLEAN:
+                    return Boolean.valueOf(paramValue);
+                case DATE:
+                    return new SimpleDateFormat(DATE_FORMAT).parse(paramValue);
+                case DATETIME:
+                    return new SimpleDateFormat(DATE_TIME_FORMAT).parse(paramValue);
+                default:
+                    throw new IllegalArgumentException("Handling for data type \"" + dataType.name() + "\" not yet implemented.");
+            }
         }
     }
 
