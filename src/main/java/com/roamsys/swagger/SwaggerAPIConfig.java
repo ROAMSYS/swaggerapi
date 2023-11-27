@@ -12,6 +12,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -153,10 +154,15 @@ public class SwaggerAPIConfig {
      * Sets the URL serving the API. This field is important for completing the OpenAPI specification.
      * Declarations on the server providing the APIs themselves, it is not a requirement.
      *
-     * @param basePath The value should be in the format of a URL.
+     * @param apiUrl The API URL
      */
     public void setURL(final URL apiUrl) {
-        apiSpecBuilder.setHost(apiUrl.getHost());
+        apiSpecBuilder.setSchemes(Collections.singletonList(apiUrl.getProtocol()));
+        if (apiUrl.getPort() != -1) {
+            apiSpecBuilder.setHost(String.format("%s:%d", apiUrl.getHost(), apiUrl.getPort()));
+        } else {
+            apiSpecBuilder.setHost(apiUrl.getHost());
+        }
         apiSpecBuilder.setBasePath(apiUrl.getPath());
     }
 

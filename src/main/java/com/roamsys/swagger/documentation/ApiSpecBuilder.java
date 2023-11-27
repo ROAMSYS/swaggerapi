@@ -74,6 +74,17 @@ public class ApiSpecBuilder {
     }
 
     /**
+     * Sets the schemes to be shown and also used for generating test URLs.
+     *
+     * @param schemes the schemes
+     * @return <code>this</code> pointer
+     */
+    public ApiSpecBuilder setSchemes(final List<String> schemes) {
+        apiSpec.schemes = schemes;
+        return this;
+    }
+
+    /**
      * Sets the version to be shown in info block.
      *
      * @param version the version
