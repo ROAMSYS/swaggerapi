@@ -173,7 +173,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                             } catch (final IllegalArgumentException ex) {
                                 exceptionHandler.handleException(response, HttpServletResponse.SC_NOT_ACCEPTABLE, "Illegal parameters for called method. See server error log for details.", ex);
                             } catch (final InvocationTargetException ex) {
-                                exceptionHandler.handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Error calling method. See server error log for details.", ex);
+                                exceptionHandler.handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Error calling method. See server error log for details.", ex.getTargetException());
                             } catch (final Throwable ex) {
                                 exceptionHandler.handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Internal server error for called method. See server error log for details.", ex);
                             }
