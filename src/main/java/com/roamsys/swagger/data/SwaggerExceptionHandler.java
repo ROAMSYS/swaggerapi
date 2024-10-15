@@ -1,5 +1,9 @@
 package com.roamsys.swagger.data;
 
+import com.google.gson.GsonBuilder;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -10,7 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 public interface SwaggerExceptionHandler {
 
     /**
-     * Default implementation that uses {@link System#err}.
+     * Default implementation that uses {@link System#err}, sets the status and returns error JSON.
      */
     public static final SwaggerExceptionHandler DEFAULT = new SwaggerExceptionHandler() {
 
@@ -19,6 +23,16 @@ public interface SwaggerExceptionHandler {
             System.err.println("Error: " + message + ", status code: " + code);
             if (ex != null) {
                 ex.printStackTrace(System.err);
+            }
+            response.setStatus(code);
+            // write error JSON
+            try {
+                final PrintWriter writer = response.getWriter();
+                response.setContentType(ContentType.JSON_UTF8);
+                new GsonBuilder().create().toJson(Map.of("code", code, "reason", message), writer);
+                writer.flush();
+            } catch (final IOException nested) {
+                nested.printStackTrace(System.err);
             }
         }
     };
