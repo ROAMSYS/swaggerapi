@@ -169,7 +169,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                             try {
                                 api.getMethod().invoke(api.getAPIModelClass(), arguments);
                             } catch (final IllegalAccessException ex) {
-                                exceptionHandler.handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Called method is not visible", ex);
+                                exceptionHandler.handleException(response, HttpServletResponse.SC_BAD_REQUEST, "Called method is not accessable", ex);
                             } catch (final IllegalArgumentException ex) {
                                 exceptionHandler.handleException(response, HttpServletResponse.SC_NOT_ACCEPTABLE, "Illegal parameters for called method. See server error log for details.", ex);
                             } catch (final InvocationTargetException ex) {

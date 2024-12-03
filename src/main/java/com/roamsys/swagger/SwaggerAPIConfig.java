@@ -105,6 +105,7 @@ public class SwaggerAPIConfig {
                 if (method.isAnnotationPresent(SwaggerApi.class)) {
 
                     // fetch Swagger annotations for the method and it's parameters and prepare the data structures for them
+                    method.setAccessible(true);
                     final SwaggerApi annotation = method.getAnnotation(SwaggerApi.class);
                     final Annotation[][] annotations = method.getParameterAnnotations();
                     final List<SwaggerParameter> paramAnnotations = new ArrayList<>(annotations.length);
