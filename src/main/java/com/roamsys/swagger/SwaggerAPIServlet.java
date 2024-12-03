@@ -153,7 +153,7 @@ public class SwaggerAPIServlet extends HttpServlet {
                                             break;
 
                                         case HEADER:
-                                            arguments[i] = convertParamToArgument(paramData.getDataType(),request.getHeader(paramData.getName()));
+                                            arguments[i] = convertParamToArgument(paramData.getDataType(), request.getHeader(paramData.getName()));
                                             break;
 
                                         default:
