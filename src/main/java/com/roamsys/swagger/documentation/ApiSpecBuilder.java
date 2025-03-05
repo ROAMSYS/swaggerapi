@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Builder for creating OpenAPI Swagger documentation/specification based on metadata/code annotations.
@@ -41,7 +42,7 @@ public class ApiSpecBuilder {
         apiSpec.basePath = "/";
         apiSpec.schemes = DEFAULT_SCHEMES;
         apiSpec.securityDefinitions = DEFAULT_SECURITY_DEFINITION;
-        apiSpec.paths = new HashMap<>();
+        apiSpec.paths = new TreeMap<>();
     }
 
     /**
