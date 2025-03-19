@@ -97,14 +97,15 @@ public class SwaggerAPIConfig {
      */
     public void registerModel(final SwaggerAPIModel model) {
         // check if current model is annotated with {@link SwaggerModel}
-        if (model.getClass().isAnnotationPresent(SwaggerModel.class)) {
-            final SwaggerModel modelAnnotation = model.getClass().getAnnotation(SwaggerModel.class);
+        final SwaggerModel modelAnnotation = model.getClass().getAnnotation(SwaggerModel.class);
+        if (modelAnnotation != null) {
             final String modelPath = modelAnnotation.path() + "." + modelAnnotation.format();
 
             for (final Method method : model.getClass().getMethods()) {
                 if (method.isAnnotationPresent(SwaggerApi.class)) {
 
                     // fetch Swagger annotations for the method and it's parameters and prepare the data structures for them
+                    method.setAccessible(true);
                     final SwaggerApi annotation = method.getAnnotation(SwaggerApi.class);
                     final Annotation[][] annotations = method.getParameterAnnotations();
                     final List<SwaggerParameter> paramAnnotations = new ArrayList<>(annotations.length);
@@ -128,6 +129,8 @@ public class SwaggerAPIConfig {
                     apiSpecBuilder.addOperation(modelAnnotation, annotation, paramAnnotations);
                 }
             }
+        } else {
+            throw new IllegalArgumentException(SwaggerAPIModel.class.getSimpleName() + " annotation must be present on model class");
         }
     }
 
