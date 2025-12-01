@@ -36,7 +36,7 @@ steps:
       - test -s /root/.m2/settings.xml || { echo "settings.xml empty"; exit 1; }
 
       # Version setzen
-      - sh .woodpecker/set-version.sh
+      - sh set-version.sh
 
       # Tests
       - mvn -B -e clean test
@@ -74,7 +74,7 @@ steps:
       - printf '%s' "$MAVEN_SETTINGS_XML" > /root/.m2/settings.xml
       - test -s /root/.m2/settings.xml || { echo "settings.xml empty"; exit 1; }
 
-      - sh .woodpecker/set-version.sh
+      - sh set-version.sh
 
       - mvn -B -e -DskipTests=true -DretryFailedDeploymentCount=2 \
           -DaltDeploymentRepository=roamsys-repository::default::sftp://$REPO_HOST$REPO_PATH \
