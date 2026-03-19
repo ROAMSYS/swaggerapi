@@ -15,13 +15,14 @@ import java.lang.annotation.Target;
 public @interface SwaggerApi {
 
     /**
-     * Enum constants for HTTP methods
+     * All supported HTTP methods.
      */
     public enum HTTPMethod {
 
         GET("get"),
         POST("post"),
         PUT("put"),
+        PATCH("patch"),
         DELETE("delete");
 
         private final String name;

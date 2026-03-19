@@ -8,16 +8,18 @@ import com.roamsys.swagger.data.SwaggerAPIContext;
 import com.roamsys.swagger.data.SwaggerAPIModelData;
 import com.roamsys.swagger.data.SwaggerAPIParameterData;
 import com.roamsys.swagger.data.SwaggerExceptionHandler;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.regex.Matcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -72,17 +74,7 @@ public class SwaggerAPIServlet extends HttpServlet {
             return;
         }
 
-        // enables cross-origin-access, if allowed in config
-        if (config.isCrossOriginAccessAllowed()) {
-            response.addHeader("Access-Control-Allow-Origin", "*");
-            response.addHeader("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, UPDATE, OPTIONS");
-            response.addHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With, X-Api-Key");
-        }
-
-        // sets the default content type, if defined in config
-        if (config.getDefaultContentType() != null) {
-            response.setContentType(config.getDefaultContentType());
-        }
+        prepareResponse(response, config);
 
         // try to authenticate the API call
         if (config.getAuthorizationHandler() != null && !config.getAuthorizationHandler().isRequestAuthorized(request, response)) {
@@ -187,7 +179,7 @@ public class SwaggerAPIServlet extends HttpServlet {
             }
         }
 
-        // execute post-request handler
+        // Execute post-request handler
         if (config.getPostRequestHandler() != null) {
             config.getPostRequestHandler().handle(request, response);
         }
@@ -225,19 +217,30 @@ public class SwaggerAPIServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Prepare response by adding access control headers and content type.
+     *
+     * @param response the response
+     * @param config the config
+     */
+    private void prepareResponse(final HttpServletResponse response, final SwaggerAPIConfig config) {
+        // enables cross-origin-access, if allowed in config
+        if (config.isCrossOriginAccessAllowed()) {
+            response.addHeader("Access-Control-Allow-Origin", "*");
+            response.addHeader("Access-Control-Allow-Methods", Arrays.stream(HTTPMethod.values()).map(HTTPMethod::name).collect(Collectors.joining (", ")) +  ", OPTIONS");
+            response.addHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With, X-Api-Key");
+        }
+
+        // sets the default content type, if defined in config
+        if (config.getDefaultContentType() != null) {
+            response.setContentType(config.getDefaultContentType());
+        }
+    }
+
+
     @Override
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         processRequest(request, response, HTTPMethod.GET);
-    }
-
-    @Override
-    protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-        processRequest(request, response, HTTPMethod.POST);
-    }
-
-    @Override
-    protected void doDelete(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-        processRequest(request, response, HTTPMethod.DELETE);
     }
 
     @Override
@@ -246,19 +249,23 @@ public class SwaggerAPIServlet extends HttpServlet {
     }
 
     @Override
+    protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+        processRequest(request, response, HTTPMethod.POST);
+    }
+
+    @Override
+    protected void doPatch(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+        processRequest(request, response, HTTPMethod.PATCH);
+    }
+
+    @Override
+    protected void doDelete(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+        processRequest(request, response, HTTPMethod.DELETE);
+    }
+
+    @Override
     protected void doOptions(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-        final SwaggerAPIConfig config = (SwaggerAPIConfig) request.getSession().getServletContext().getAttribute(SwaggerAPIConfig.SERVLET_ATTRIBUTE_NAME);
-
-        if (config.isCrossOriginAccessAllowed()) {
-            response.addHeader("Access-Control-Allow-Origin", "*");
-            response.addHeader("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, UPDATE, OPTIONS");
-            response.addHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With, X-Api-Key");
-        }
-
-        if (config.getDefaultContentType() != null) {
-            response.setContentType(config.getDefaultContentType());
-        }
-
+        prepareResponse(response, (SwaggerAPIConfig) request.getSession().getServletContext().getAttribute(SwaggerAPIConfig.SERVLET_ATTRIBUTE_NAME));
         response.setStatus(HttpServletResponse.SC_OK);
         response.flushBuffer();
     }
