@@ -1,0 +1,79 @@
+when:
+  event: [ push, manual ]
+
+steps:
+  - name: test
+    when:
+      - event: [ push, manual ]
+    image: maven:3.9-eclipse-temurin-21
+    environment:
+      REPO_HOST:
+        from_secret: repo_host
+      REPO_PATH:
+        from_secret: repo_path
+      REPO_USER:
+        from_secret: repo_user
+      REPO_KEY:
+        from_secret: maven_repo_private_key
+      MAVEN_SETTINGS_XML:
+        from_secret: maven_settings_xml
+      REPO_EXTRA_IP:
+        from_secret: repo_extra_ip
+      MAVEN_OPTS: "-Dmaven.repo.local=/woodpecker/.m2"
+    commands:
+      # Systemtools
+      - apt-get update && apt-get install -y --no-install-recommends openssh-client git rsync && rm -rf /var/lib/apt/lists/*
+
+      # SSH + Maven settings
+      - mkdir -p /root/.ssh /root/.m2 /woodpecker/.m2
+      - printf '%s' "$REPO_KEY" > /root/.ssh/id_deploy && chmod 600 /root/.ssh/id_deploy
+
+      - ssh-keyscan -H "$REPO_HOST" >> /root/.ssh/known_hosts || true
+      - '[ -n "$REPO_EXTRA_IP" ] && ssh-keyscan -H "$REPO_EXTRA_IP" >> /root/.ssh/known_hosts || true'
+
+      # Maven settings aus Secret
+      - printf '%s' "$MAVEN_SETTINGS_XML" > /root/.m2/settings.xml
+      - test -s /root/.m2/settings.xml || { echo "settings.xml empty"; exit 1; }
+
+      # Version setzen
+      - sh set-version.sh --development-snapshot
+
+      # Tests
+      - mvn -B -e clean test
+
+
+  - name: deploy
+    when:
+      - event: [ push, manual ]
+    image: maven:3.9-eclipse-temurin-21
+    environment:
+      REPO_HOST:
+        from_secret: repo_host
+      REPO_PATH:
+        from_secret: repo_path
+      REPO_USER:
+        from_secret: repo_user
+      REPO_KEY:
+        from_secret: maven_repo_private_key
+      MAVEN_SETTINGS_XML:
+        from_secret: maven_settings_xml
+      REPO_EXTRA_IP:
+        from_secret: repo_extra_ip
+      MAVEN_OPTS: "-Dmaven.repo.local=/woodpecker/.m2"
+    commands:
+      - apt-get update && apt-get install -y --no-install-recommends openssh-client && rm -rf /var/lib/apt/lists/*
+      - '[ -d /woodpecker/.m2 ] && echo "maven cache already exists" || echo "maven cache being created"'
+
+      - mkdir -p /root/.ssh /root/.m2 /woodpecker/.m2
+      - printf '%s' "$REPO_KEY" > /root/.ssh/id_deploy && chmod 600 /root/.ssh/id_deploy
+
+      - ssh-keyscan -H "$REPO_HOST" >> /root/.ssh/known_hosts || true
+      - '[ -n "$REPO_EXTRA_IP" ] && ssh-keyscan -H "$REPO_EXTRA_IP" >> /root/.ssh/known_hosts || true'
+
+      # Maven settings aus Secret
+      - printf '%s' "$MAVEN_SETTINGS_XML" > /root/.m2/settings.xml
+      - test -s /root/.m2/settings.xml || { echo "settings.xml empty"; exit 1; }
+
+      - sh set-version.sh --development-snapshot
+
+      - mvn -B -e -DskipTests=true -DretryFailedDeploymentCount=2 -DaltDeploymentRepository=roamsys-repository::default::sftp://$REPO_HOST$REPO_PATH deploy
