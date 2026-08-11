@@ -69,14 +69,14 @@
         <repository>
             <name>Roamsys Repository</name>
             <id>roamsys-repository</id>
-            <url>scp://37.157.154.101/home/mvnuser/repository</url>
+            <url>scp://repo.roamsys.com/srv/maven/repository</url>
         </repository>
     </repositories>
     <distributionManagement>
         <repository>
             <id>roamsys-repository</id>
             <name>Roamsys Repository</name>
-            <url>scp://37.157.154.101/home/mvnuser/repository</url>
+            <url>scp://repo.roamsys.com/srv/maven/repository</url>
         </repository>
     </distributionManagement>
     <developers>
