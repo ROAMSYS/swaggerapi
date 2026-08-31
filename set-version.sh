@@ -26,11 +26,28 @@ if [ -z "$BUILD_NUMBER" ]; then
   BUILD_NUMBER=0
 fi
 
-POM_VERSION="$(mvn -B help:evaluate -Dexpression=project.version -q -DforceStdout)"
+# Version ueber eine Datei einsammeln statt ueber $( ): Maven schreibt seinen
+# Fehlerreport auf stdout, in einer Kommandosubstitution wird der komplett
+# geschluckt und set -e bricht ohne eine einzige Logzeile ab. Mit -Doutput
+# bleibt das Maven-Log im CI sichtbar.
+POM_VERSION_FILE="target/pom-version.txt"
+mkdir -p "$(dirname "$POM_VERSION_FILE")"
+rm -f "$POM_VERSION_FILE"
+mvn -B help:evaluate -Dexpression=project.version -Doutput="$POM_VERSION_FILE"
+POM_VERSION="$(tr -d ' \t\r\n' < "$POM_VERSION_FILE")"
 if [ -z "$POM_VERSION" ]; then
   echo "Unable to determine Maven project version" >&2
   exit 1
 fi
+# help:evaluate schreibt bei unbekannten Ausdruecken eine Klartextmeldung in die
+# Datei statt zu scheitern - deshalb gegen ein Versionsmuster pruefen.
+case "$POM_VERSION" in
+  [0-9]*) ;;
+  *)
+    echo "Unexpected Maven project version: '$POM_VERSION'" >&2
+    exit 1
+    ;;
+esac
 
 BASE_VERSION="$POM_VERSION"
 case "$BASE_VERSION" in
@@ -75,12 +92,19 @@ fi
 echo "Setting Maven project version to ${NEW_VERSION} (from ${POM_VERSION}) for branch ${BRANCH}"
 mvn -B versions:set -DnewVersion="$NEW_VERSION"
 
-# dependency version cleanup
-POM_FILE="pom.xml"
+# dependency version cleanup (root pom.xml and submodule pom.xml files)
+POM_FILES="pom.xml"
+for SUBPOM in api/pom.xml interconnect/pom.xml; do
+  [ -f "$SUBPOM" ] && POM_FILES="$POM_FILES $SUBPOM"
+done
 if printf '%s' "$BRANCH" | grep -Eq '^uat(-|$)'; then
-  echo "Modification of dependency versions: Replacing -SNAPSHOT → -RC"
-  sed -i 's/-SNAPSHOT/-RC/g' "$POM_FILE"
+  for POM in $POM_FILES; do
+    echo "Modification of dependency versions in $POM: Replacing -SNAPSHOT → -RC"
+    sed -i 's/-SNAPSHOT/-RC/g' "$POM"
+  done
 elif [ "$BRANCH" = "master" ]; then
-  echo "Modification of dependency versions: Removing -SNAPSHOT"
-  sed -i 's/-SNAPSHOT//g' "$POM_FILE"
+  for POM in $POM_FILES; do
+    echo "Modification of dependency versions in $POM: Removing -SNAPSHOT"
+    sed -i 's/-SNAPSHOT//g' "$POM"
+  done
 fi
