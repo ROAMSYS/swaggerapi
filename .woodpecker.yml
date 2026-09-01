@@ -76,4 +76,4 @@ steps:
 
       - sh set-version.sh --development-snapshot
 
-      - mvn -B -e -DskipTests=true -DretryFailedDeploymentCount=2 -DaltDeploymentRepository=roamsys-repository::default::sftp://$REPO_HOST$REPO_PATH deploy
+      - mvn -B -e -DskipTests=true -DretryFailedDeploymentCount=2 -DaltDeploymentRepository=roamsys-repository::default::scpexe://$REPO_HOST$REPO_PATH deploy
