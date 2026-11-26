@@ -26,10 +26,8 @@ if [ -z "$BUILD_NUMBER" ]; then
   BUILD_NUMBER=0
 fi
 
-# Version ueber eine Datei einsammeln statt ueber $( ): Maven schreibt seinen
-# Fehlerreport auf stdout, in einer Kommandosubstitution wird der komplett
-# geschluckt und set -e bricht ohne eine einzige Logzeile ab. Mit -Doutput
-# bleibt das Maven-Log im CI sichtbar.
+# Read the version via a file, not $( ): Maven prints errors to stdout, which a
+# command substitution would swallow before set -e aborts silently.
 POM_VERSION_FILE="target/pom-version.txt"
 mkdir -p "$(dirname "$POM_VERSION_FILE")"
 rm -f "$POM_VERSION_FILE"
@@ -39,8 +37,7 @@ if [ -z "$POM_VERSION" ]; then
   echo "Unable to determine Maven project version" >&2
   exit 1
 fi
-# help:evaluate schreibt bei unbekannten Ausdruecken eine Klartextmeldung in die
-# Datei statt zu scheitern - deshalb gegen ein Versionsmuster pruefen.
+# help:evaluate writes a plain-text message for unknown expressions instead of failing.
 case "$POM_VERSION" in
   [0-9]*) ;;
   *)
