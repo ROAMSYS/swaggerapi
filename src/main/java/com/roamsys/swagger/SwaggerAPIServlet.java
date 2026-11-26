@@ -12,6 +12,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.text.ParseException;
@@ -51,7 +52,7 @@ public class SwaggerAPIServlet extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     protected void processRequest(final HttpServletRequest request, final HttpServletResponse response, final HTTPMethod method) throws ServletException, IOException {
-        final SwaggerAPIConfig config = (SwaggerAPIConfig) request.getSession().getServletContext().getAttribute(SwaggerAPIConfig.SERVLET_ATTRIBUTE_NAME);
+        final SwaggerAPIConfig config = (SwaggerAPIConfig) request.getServletContext().getAttribute(SwaggerAPIConfig.SERVLET_ATTRIBUTE_NAME);
 
         // register exception handler for API
         final String exceptionHandlerClass = getServletConfig().getInitParameter("exceptionHandler");
@@ -265,18 +266,23 @@ public class SwaggerAPIServlet extends HttpServlet {
 
     @Override
     protected void doOptions(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-        prepareResponse(response, (SwaggerAPIConfig) request.getSession().getServletContext().getAttribute(SwaggerAPIConfig.SERVLET_ATTRIBUTE_NAME));
+        prepareResponse(response, (SwaggerAPIConfig) request.getServletContext().getAttribute(SwaggerAPIConfig.SERVLET_ATTRIBUTE_NAME));
         response.setStatus(HttpServletResponse.SC_OK);
         response.flushBuffer();
     }
 
     @Override
     protected void service(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+        // a session sent along by the caller may belong to a logged in user and therefore may not be touched here
+        final HttpSession callerSession = request.getSession(false);
         try {
             super.service(request, response);
         } finally {
-            // because Swagger REST calls are stateless the session should be invalidated immediately
-            request.getSession().invalidate();
+            // because Swagger REST calls are stateless a session created while serving the call is invalidated immediately
+            final HttpSession session = request.getSession(false);
+            if (session != null && session != callerSession) {
+                session.invalidate();
+            }
         }
     }
 }
